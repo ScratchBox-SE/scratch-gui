@@ -106,6 +106,7 @@ import editIcon from './icon--edit.svg';
 import errorIcon from './tw-error.svg';
 import advancedIcon from './tw-advanced.svg';
 
+import scratchBoxLogo from './scratchbox-logo.svg';
 import ninetiesLogo from './nineties_logo.svg';
 import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
@@ -674,6 +675,18 @@ class MenuBar extends React.Component {
                     }
                 )}>
                     <div className={styles.fileGroup}>
+                        <div className={classNames(styles.menuBarItem)}>
+                            <img
+                                id="logo_img"
+                                alt="ScratchBox"
+                                className={classNames(styles.scratchLogo, {
+                                    [styles.clickable]: typeof this.props.onClickLogo !== 'undefined'
+                                })}
+                                draggable={false}
+                                src={this.props.logo}
+                                onClick={this.props.onClickLogo}
+                            />
+                        </div>
                         {this.props.errors.length > 0 && <div>
                             <MenuLabel
                                 open={this.props.errorsMenuOpen}
@@ -1356,6 +1369,7 @@ MenuBar.contextTypes = {
 };
 
 MenuBar.defaultProps = {
+    logo: scratchBoxLogo,
     onShare: () => {}
 };
 

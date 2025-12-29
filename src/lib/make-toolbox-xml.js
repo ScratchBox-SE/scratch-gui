@@ -106,40 +106,6 @@ const motion = function (isInitialSetup, isStage, targetId, colors) {
                 </shadow>
             </value>
         </block>
-        <block type="motion_pointtowards_xy">
-            <value name="X">
-                <shadow id="pointx" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-            <value name="Y">
-                <shadow id="pointy" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-        </block>
-        <block type="motion_pointtowards_xyfrom">
-            <value name="X">
-                <shadow id="pointx" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-            <value name="Y">
-                <shadow id="pointy" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-            <value name="FROMX">
-                <shadow id="pointx" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-            <value name="FROMY">
-                <shadow id="pointy" type="math_number">
-                    <field name="NUM">0</field>
-                </shadow>
-            </value>
-        </block>
         ${blockSeparator}
         <block type="motion_changexby">
             <value name="DX">
@@ -326,7 +292,6 @@ const looks = function (isInitialSetup, isStage, targetId, costumeName, backdrop
             <block id="${targetId}_costumenumbername" type="looks_costumenumbername"/>
             <block id="backdropnumbername" type="looks_backdropnumbername"/>
             <block id="${targetId}_size" type="looks_size"/>
-            <block id="${targetId}_costumes" type="looks_costumes"/>
         `}
         ${categorySeparator}
     </category>
@@ -470,30 +435,6 @@ const control = function (isInitialSetup, isStage, targetId, colors) {
                 </shadow>
             </value>
         </block>
-        ${blockSeparator}
-        <block type="control_switch">
-            <value name="VALUE">
-                <shadow type="text">
-                    <field name="TEXT">value</field>
-                </shadow>
-            </value>
-        </block>
-        <block type="control_case">
-            <value name="VALUE">
-                <shadow type="text">
-                    <field name="TEXT">case</field>
-                </shadow>
-            </value>
-        </block>
-        <block type="control_case_fallthrough">
-            <value name="VALUE">
-                <shadow type="text">
-                    <field name="TEXT">case</field>
-                </shadow>
-            </value>
-        </block>
-        <block type="control_default"/>
-        <block type="control_break"/>
         ${blockSeparator}
         <block type="control_stop"/>
         ${blockSeparator}

@@ -375,6 +375,9 @@ class CustomTheme extends Theme {
                 } else if (this.gui === 'midnight') {
                     const guiMidnight = require('./gui/midnight.js');
                     baseGuiColors = guiMidnight.guiColors || {};
+                } else if (this.gui === "scratchbox-dark") {
+                    const guiScratchBoxDark = require("./gui/scratchbox-dark.js");
+                    baseGuiColors = guiScratchBoxDark.guiColors || {};
                 } else {
                     baseGuiColors = guiLightColors;
                 }
@@ -424,6 +427,9 @@ class CustomTheme extends Theme {
                 } else if (this.blocks === 'dark') {
                     const blocksDark = require('./blocks/dark.js');
                     baseBlockColors = blocksDark.blockColors || {};
+                } else if (this.gui === "scratchbox-dark") {
+                    const guiScratchBoxDark = require("./gui/scratchbox-dark.js");
+                    baseBlockColors = guiScratchBoxDark.blockColors || {}; 
                 } else {
                     // Default to 'three' theme
                     const blocksThree = require('./blocks/three.js');
@@ -437,6 +443,9 @@ class CustomTheme extends Theme {
                 } else if (this.gui === 'midnight') {
                     const guiMidnight = require('./gui/midnight.js');
                     baseGuiColors = guiMidnight.blockColors || {};
+                } else if (this.gui === "scratchbox-dark") {
+                    const guiScratchBoxDark = require("./gui/scratchbox-dark.js");
+                    baseGuiColors = guiScratchBoxDark.blockColors || {};
                 } else {
                     const guiLight = require('./gui/light.js');
                     baseGuiColors = guiLight.blockColors || {};

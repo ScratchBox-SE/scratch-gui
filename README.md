@@ -1,8 +1,8 @@
-scratch-gui modified for use in [TurboWarp](https://turbowarp.org/)
+Modified version of [MistWarp](https://github.com/MistWarp) for use with ScratchBox.
 
 ## Setup
 
-See https://docs.turbowarp.org/development/getting-started to setup the complete TurboWarp environment.
+See https://docs.warp.mistium.org/development/getting-started to setup the complete MistWarp environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
 

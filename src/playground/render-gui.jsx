@@ -4,6 +4,10 @@ import GUI from '../containers/gui.jsx';
 const searchParams = new URLSearchParams(location.search);
 const cloudHost = searchParams.get('cloud_host') || 'wss://clouddata.turbowarp.org';
 
+const onClickLogo = () => {
+    window.location = 'https://scratchbox.grady.link';
+};
+
 const RenderGUI = props => (
     <GUI
         cloudHost={cloudHost}
@@ -13,6 +17,7 @@ const RenderGUI = props => (
         basePath={process.env.ROOT}
         canEditTitle
         enableCommunity
+        onClickLogo={onClickLogo}
         {...props}
     />
 );

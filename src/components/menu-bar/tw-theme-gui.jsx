@@ -7,7 +7,7 @@ import {connect} from 'react-redux';
 import check from './check.svg';
 import dropdownCaret from './dropdown-caret.svg';
 import {MenuItem, Submenu} from '../menu/menu.jsx';
-import {GUI_DARK, GUI_LIGHT, GUI_MIDNIGHT, Theme} from '../../lib/themes/index.js';
+import {GUI_DARK, GUI_LIGHT, GUI_MIDNIGHT, GUI_SCRATCHBOX_DARK, GUI_SCRATCHBOX_LIGHT, Theme} from '../../lib/themes/index.js';
 import {closeSettingsMenu, guiMenuOpen, openGuiMenu} from '../../reducers/menus.js';
 import {setTheme} from '../../reducers/theme.js';
 import {persistTheme} from '../../lib/themes/themePersistance.js';
@@ -20,7 +20,9 @@ const ThemeIcon = ({id}) => {
     const icons = {
         [GUI_LIGHT]: lightModeIcon,
         [GUI_DARK]: darkModeIcon,
-        [GUI_MIDNIGHT]: midnightModeIcon
+        [GUI_MIDNIGHT]: midnightModeIcon,
+        [GUI_SCRATCHBOX_DARK]: midnightModeIcon, // TODO: Custom ScratchBox icons
+        [GUI_SCRATCHBOX_LIGHT]: lightModeIcon
     };
     
     return (
@@ -52,6 +54,20 @@ const ThemeMenuItem = props => (
             />
             <ThemeIcon id={props.id} />
             <span className={styles.themeName}>
+                {props.id === GUI_SCRATCHBOX_LIGHT && (
+                    <FormattedMessage
+                        defaultMessage="ScratchBox Light"
+                        description="Label for ScratchBox Light theme option"
+                        id="tw.theme.scratchbox.light"
+                    />
+                )}
+                {props.id === GUI_SCRATCHBOX_DARK && (
+                    <FormattedMessage
+                        defaultMessage="ScratchBox Dark"
+                        description="Label for ScratchBox Dark theme option"
+                        id="tw.theme.scratchbox.dark"
+                    />
+                )}
                 {props.id === GUI_LIGHT && (
                     <FormattedMessage
                         defaultMessage="Light"
@@ -114,6 +130,18 @@ const GuiThemeMenu = ({
             place={isRtl ? 'left' : 'right'}
             className={styles.submenu}
         >
+            <ThemeMenuItem
+                id={GUI_SCRATCHBOX_LIGHT}
+                isSelected={theme.gui === GUI_SCRATCHBOX_LIGHT}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={() => onChangeTheme(theme.set('gui', GUI_SCRATCHBOX_LIGHT))}
+            />
+            <ThemeMenuItem
+                id={GUI_SCRATCHBOX_DARK}
+                isSelected={theme.gui === GUI_SCRATCHBOX_DARK}
+                // eslint-disable-next-line react/jsx-no-bind
+                onClick={() => onChangeTheme(theme.set('gui', GUI_SCRATCHBOX_DARK))}
+            />
             <ThemeMenuItem
                 id={GUI_LIGHT}
                 isSelected={theme.gui === GUI_LIGHT}
