@@ -49,6 +49,10 @@ import styles from './interface.css';
 let WindowManager = null;
 let settingsWindow = null;
 
+const onClickLogo = () => {
+    window.location = 'https://scratchbox.grady.link';
+};
+
 const loadWindowManager = async () => {
     if (!WindowManager) {
         try {
@@ -322,6 +326,7 @@ class Interface extends React.Component {
                             canChangeTheme
                             enableSeeInside
                             onClickAddonSettings={handleClickAddonSettings}
+                            onClickLogo={onClickLogo}
                         />
                     </div>
                 ) : null}
@@ -337,6 +342,7 @@ class Interface extends React.Component {
                         onUpdateProjectTitle={this.handleUpdateProjectTitle}
                         backpackVisible
                         backpackHost="_local_"
+                        onClickLogo={onClickLogo}
                         {...props}
                     />
                     {isHomepage ? (
