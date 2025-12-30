@@ -9,15 +9,13 @@
     height: 100%;
     display: flex;
     align-items: center;
-    position: absolute; /* absolute rotur */
     top: 0px;
     right: 0px;
     background-color: rgba(0, 0, 0, 0.25);
 }
 
-[class^="menu-bar_main-menu-align-right"].save-now {
-    left: 0px;
-    right: unset;
+[class*="menu-bar_menu-bar"]:not(:has([class*="main-menu-align-right"])) .save-now {
+    position: absolute;
 }
 
 .save-now {
