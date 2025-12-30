@@ -16,6 +16,7 @@ const guiColors = {
   "ui-black-transparent": "#cccccc88",
 
   "text-primary": "#eeeeee",
+  "text-primary-transparent": "#eeeeeeee",
 
   "menu-bar-background": "#333333",
 
