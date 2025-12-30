@@ -33,7 +33,7 @@ import SettingsMenu from './settings-menu.jsx';
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
-import TWSaveStatus from './tw-save-status.jsx';
+import SaveStatus from './save-status.jsx';
 
 import {FEEDBACK_URL} from '../../lib/constants/brand.js';
 
@@ -1234,9 +1234,7 @@ class MenuBar extends React.Component {
                 </div>
 
                 <div className={styles.accountInfoGroup}>
-                    <TWSaveStatus
-                        showSaveFilePicker={this.props.showSaveFilePicker}
-                    />
+                    <SaveStatus onClickSave={this.handleClickSave} />
                 </div>
 
                 {aboutButton}
@@ -1448,11 +1446,18 @@ const mapDispatchToProps = dispatch => ({
     onSetTimeTravelMode: mode => dispatch(setTimeTravel(mode))
 });
 
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
+    return Object.assign({}, stateProps, dispatchProps, ownProps, {
+        onClickSave: ownProps.onClickSave || dispatchProps.onClickSave
+    });
+};
+
 export default compose(
     injectIntl,
     MenuBarHOC,
     connect(
         mapStateToProps,
-        mapDispatchToProps
+        mapDispatchToProps,
+        mergeProps
     )
 )(MenuBar);

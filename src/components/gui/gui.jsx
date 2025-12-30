@@ -172,6 +172,7 @@ const GUIComponent = props => {
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
         vm,
+        onClickSave,
         ...componentProps
     } = omit(props, 'dispatch');
     if (children) {
@@ -331,6 +332,7 @@ const GUIComponent = props => {
                     onClickNewWindow={onClickNewWindow}
                     onClickPackager={onClickPackager}
                     onClickLogo={onClickLogo}
+                    onClickSave={onClickSave}
                     onCloseAccountNav={onCloseAccountNav}
                     onLogOut={onLogOut}
                     onOpenExtensionLibrary={onOpenExtensionLibrary}
@@ -553,7 +555,8 @@ GUIComponent.propTypes = {
     fontsModalVisible: PropTypes.bool,
     unknownPlatformModalVisible: PropTypes.bool,
     invalidProjectModalVisible: PropTypes.bool,
-    vm: PropTypes.instanceOf(VM).isRequired
+    vm: PropTypes.instanceOf(VM).isRequired,
+    onClickSave: PropTypes.func,
 };
 GUIComponent.defaultProps = {
     backpackHost: null,

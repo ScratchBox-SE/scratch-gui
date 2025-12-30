@@ -55,7 +55,14 @@ const mapDispatchToProps = dispatch => ({
     onClickSave: () => dispatch(manualUpdateProject())
 });
 
+const mergeProps = (stateProps, dispatchProps, ownProps) => {
+    return Object.assign({}, stateProps, dispatchProps, ownProps, {
+        onClickSave: ownProps.onClickSave || dispatchProps.onClickSave
+    });
+};
+
 export default connect(
     mapStateToProps,
-    mapDispatchToProps
+    mapDispatchToProps,
+    mergeProps // Add this here
 )(SaveStatus);

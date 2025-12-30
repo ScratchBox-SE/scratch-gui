@@ -45,6 +45,8 @@ import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
 
 import styles from './interface.css';
 
+const baseURL = `${window.location.protocol}//${window.location.hostname == "localhost" ? "localhost:3000" : window.location.hostname.replace("editor.", "", 1)}`;
+
 // Import window manager dynamically
 let WindowManager = null;
 let settingsWindow = null;
@@ -277,21 +279,53 @@ const Footer = () => (
     </footer>
 );
 
+
+const blobToDataURL = async (blob) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
 class Interface extends React.Component {
+    async onClickSave(projectId) {
+        if (projectId == '0') return;
+
+        // const userInfo = (await (await fetch(baseURL + "/api/auth/me", { credentials: "include" })).json()).user;
+        const projectInfo = await (await fetch(baseURL + `/api/project/${projectId}`)).json();
+
+        const projectBlob = await window.vm.saveProjectSb3();
+
+        await fetch(baseURL + `/api/project/${projectId}/edit`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            credentials: "include",
+            body: JSON.stringify({
+                file: {
+                    name: projectInfo.name + ".sb3",
+                    size: projectBlob.size,
+                    type: 'application/x.scratch.sb3',
+                    lastModified: Date.now(),
+                    content: await blobToDataURL(projectBlob)
+                },
+                name: projectInfo.name,
+                description: projectInfo.description,
+                platforms: projectInfo.platforms,
+                private: projectInfo.private
+            })
+        });
+    }
+
     constructor (props) {
         super(props);
-        this.handleUpdateProjectTitle = this.handleUpdateProjectTitle.bind(this);
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
             loadServiceWorker();
-        }
-    }
-    handleUpdateProjectTitle (title, isDefault) {
-        if (isDefault || !title) {
-            document.title = `${APP_NAME} - ${this.props.intl.formatMessage(messages.defaultTitle)}`;
-        } else {
-            document.title = `${title} - ${APP_NAME}`;
         }
     }
     render () {
@@ -339,10 +373,12 @@ class Interface extends React.Component {
                 >
                     <GUI
                         onClickAddonSettings={handleClickAddonSettings}
-                        onUpdateProjectTitle={this.handleUpdateProjectTitle}
                         backpackVisible
                         backpackHost="_local_"
                         onClickLogo={onClickLogo}
+                        canEditTitle={false}
+                        enableCommunity={false}
+                        onClickSave={() => this.onClickSave(projectId)}
                         {...props}
                     />
                     {isHomepage ? (
