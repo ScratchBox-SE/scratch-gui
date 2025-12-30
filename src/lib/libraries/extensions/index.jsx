@@ -47,6 +47,7 @@ import gdxforConnectionIconURL from './gdxfor/gdxfor-illustration.svg';
 import gdxforConnectionSmallIconURL from './gdxfor/gdxfor-small.svg';
 
 import twIcon from './tw/tw.svg';
+import seIcon from './sb/se.svg';
 import customExtensionIcon from './custom/custom.svg';
 import returnIcon from './custom/return.svg';
 import galleryIcon from './gallery/gallery.svg';
@@ -56,12 +57,30 @@ export default [
     {
         name: (
             <FormattedMessage
-                defaultMessage="{APP_NAME} Blocks"
+                defaultMessage="Scratch Everywhere! Blocks"
+                description="Name of the strange 'Scratch Everywhere! Blocks' extension"
+                id="sb.seExtension.name"
+            />
+        ),
+        extensionId: 'se',
+        iconURL: seIcon,
+        description: (
+            <FormattedMessage
+                defaultMessage="Helpful new blocks."
+                description="Description of the strange 'Scratch Everywhere! Blocks' extension"
+                id="sb.seExtension.description"
+            />
+        ),
+        incompatibleWithScratch: false,
+        tags: ['sb'],
+        featured: true
+    },
+    {
+        name: (
+            <FormattedMessage
+                defaultMessage="TurboWarp Blocks"
                 description="Name of the strange 'TurboWarp Blocks' extension"
                 id="tw.twExtension.name"
-                values={{
-                    APP_NAME
-                }}
             />
         ),
         extensionId: 'tw',

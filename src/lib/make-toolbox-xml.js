@@ -725,9 +725,6 @@ const operators = function (isInitialSetup, isStage, targetId, colors) {
                 </shadow>
             </value>
         </block>
-        ${categorySeparator}
-        <block type="operator_pi"/>
-        <block type="operator_newline"/>
     </category>
     `;
 };
@@ -763,6 +760,7 @@ const extraTurboWarpBlocks = `
 <block type="argument_reporter_boolean"><field name="VALUE">is compiled?</field></block>
 <block type="argument_reporter_boolean"><field name="VALUE">is MistWarp?</field></block>
 `;
+
 /* eslint-enable no-unused-vars */
 
 const xmlOpen = '<xml style="display: none">';
