@@ -41,8 +41,8 @@ const defaultProject = translator => {
         assetType: 'ImageVector',
         dataFormat: 'SVG',
         data: encoder.encode(costume1),
-        rotationCenterX: 62.2463935873121,
-        rotationCenterY: 83.98003139797682
+        rotationCenterX: 0.0,
+        rotationCenterY: 0.0
     }];
 };
 
