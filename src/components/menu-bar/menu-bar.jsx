@@ -1,9 +1,9 @@
 /* eslint-disable react/no-unused-prop-types */
 /* eslint-disable no-unused-vars */
 import classNames from 'classnames';
-import {connect} from 'react-redux';
-import {compose} from 'redux';
-import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import { connect } from 'react-redux';
+import { compose } from 'redux';
+import { defineMessages, FormattedMessage, injectIntl, intlShape } from 'react-intl';
 import PropTypes from 'prop-types';
 import bindAll from 'lodash.bindall';
 import bowser from 'bowser';
@@ -15,13 +15,13 @@ import Box from '../box/box.jsx';
 import Button from '../button/button.jsx';
 import CommunityButton from './community-button.jsx';
 import ShareButton from './share-button.jsx';
-import {ComingSoonTooltip} from '../coming-soon/coming-soon.jsx';
+import { ComingSoonTooltip } from '../coming-soon/coming-soon.jsx';
 import Divider from '../divider/divider.jsx';
 // import SaveStatus from './save-status.jsx';
 import ProjectWatcher from '../../containers/project-watcher.jsx';
 import MenuBarMenu from './menu-bar-menu.jsx';
 import MenuLabel from './tw-menu-label.jsx';
-import {MenuItem, MenuSection} from '../menu/menu.jsx';
+import { MenuItem, MenuSection } from '../menu/menu.jsx';
 import ProjectTitleInput from './project-title-input.jsx';
 import AuthorInfo from './author-info.jsx';
 import SB3Downloader from '../../containers/sb3-downloader.jsx';
@@ -35,10 +35,10 @@ import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import SaveStatus from './save-status.jsx';
 
-import {FEEDBACK_URL} from '../../lib/constants/brand.js';
+import { FEEDBACK_URL } from '../../lib/constants/brand.js';
 
-import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
-import {setPlayer} from '../../reducers/mode';
+import { openTipsLibrary, openSettingsModal, openRestorePointModal } from '../../reducers/modals';
+import { setPlayer } from '../../reducers/mode';
 import {
     isTimeTravel220022BC,
     isTimeTravel1920,
@@ -82,7 +82,7 @@ import {
     openErrorsMenu,
     closeErrorsMenu
 } from '../../reducers/menus';
-import {setFileHandle} from '../../reducers/tw.js';
+import { setFileHandle } from '../../reducers/tw.js';
 import {
     setAutosaveEnabled,
     setAutosaveInterval,
@@ -97,12 +97,9 @@ import styles from './menu-bar.css';
 // import helpIcon from '../../lib/assets/icon--tutorials.svg';
 // import mystuffIcon from './icon--mystuff.png';
 // import profileIcon from './icon--profile.png';
-import remixIcon from './icon--remix.svg';
-import dropdownCaret from './dropdown-caret.svg';
 import aboutIcon from './icon--about.svg';
-import fileIcon from './icon--file.svg';
-import editIcon from './icon--edit.svg';
-import errorIcon from './tw-error.svg';
+
+import ChevronDown from './ChevronDown.jsx';
 
 import scratchBoxLogo from './scratchbox-logo.svg';
 import ninetiesLogo from './nineties_logo.svg';
@@ -110,11 +107,17 @@ import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
 
+import {
+    FilePen, PencilRuler, TriangleAlert, Info, Shuffle,
+    FilePlusCorner, Upload, Download, RefreshCcw, ClockPlus, Package,
+    Save, ArchiveRestore, Gauge, FastForward, UserPen, Cloud, Settings, PackagePlus, Puzzle
+} from 'lucide-react';
+
 import sharedMessages from '../../lib/constants/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
-import {notScratchDesktop} from '../../lib/utils/isScratchDesktop.js';
-import {APP_NAME} from '../../lib/constants/brand.js';
+import { notScratchDesktop } from '../../lib/utils/isScratchDesktop.js';
+import { APP_NAME } from '../../lib/constants/brand.js';
 
 /* const ariaMessages = defineMessages({
     tutorials: {
@@ -167,7 +170,7 @@ MenuBarItemTooltip.propTypes = {
     place: PropTypes.oneOf(['top', 'bottom', 'left', 'right'])
 };
 
-const MenuItemTooltip = ({id, isRtl, children, className}) => (
+const MenuItemTooltip = ({ id, isRtl, children, className }) => (
     <ComingSoonTooltip
         className={classNames(styles.comingSoon, className)}
         isRtl={isRtl}
@@ -190,7 +193,7 @@ const AboutButton = props => (
     <Button
         className={classNames(styles.menuBarItem, styles.hoverable)}
         iconClassName={styles.aboutIcon}
-        iconSrc={aboutIcon}
+        iconElem={Info}
         onClick={props.onClick}
     />
 );
@@ -217,7 +220,7 @@ MenuItemLink.propTypes = {
 };
 
 class MenuBar extends React.Component {
-    constructor (props) {
+    constructor(props) {
         super(props);
         this.state = {
             autosaveTimeRemaining: 0,
@@ -246,24 +249,24 @@ class MenuBar extends React.Component {
             'getAutosaveTimeRemaining'
         ]);
     }
-    componentDidMount () {
+    componentDidMount() {
         document.addEventListener('keydown', this.handleKeyPress);
         this.startAutosaveCountdown();
     }
-    componentWillUnmount () {
+    componentWillUnmount() {
         document.removeEventListener('keydown', this.handleKeyPress);
         if (this.autosaveCountdownInterval) {
             clearInterval(this.autosaveCountdownInterval);
         }
     }
-    componentDidUpdate (prevProps) {
+    componentDidUpdate(prevProps) {
         // Restart countdown if autosave settings changed
         if (prevProps.autosaveEnabled !== this.props.autosaveEnabled ||
             prevProps.autosaveInterval !== this.props.autosaveInterval) {
             this.startAutosaveCountdown();
         }
     }
-    handleClickNew () {
+    handleClickNew() {
         // if the project is dirty, and user owns the project, we will autosave.
         // but if they are not logged in and can't save, user should consider
         // downloading or logging in first.
@@ -278,31 +281,31 @@ class MenuBar extends React.Component {
         }
         this.props.onRequestCloseFile();
     }
-    handleClickNewWindow () {
+    handleClickNewWindow() {
         this.props.onClickNewWindow();
         this.props.onRequestCloseFile();
     }
-    handleClickRemix () {
+    handleClickRemix() {
         this.props.onClickRemix();
         this.props.onRequestCloseFile();
     }
-    handleClickSave () {
+    handleClickSave() {
         this.props.onClickSave();
         this.props.onRequestCloseFile();
     }
-    handleClickSaveAsCopy () {
+    handleClickSaveAsCopy() {
         this.props.onClickSaveAsCopy();
         this.props.onRequestCloseFile();
     }
-    handleClickPackager () {
+    handleClickPackager() {
         this.props.onClickPackager();
         this.props.onRequestCloseFile();
     }
-    handleClickDesktopSettings () {
+    handleClickDesktopSettings() {
         this.props.onClickDesktopSettings();
         this.props.onRequestCloseSettings();
     }
-    handleClickRestorePoints () {
+    handleClickRestorePoints() {
         this.props.onClickRestorePoints();
         this.props.onRequestCloseFile();
     }
@@ -311,7 +314,7 @@ class MenuBar extends React.Component {
             this.props.vm.emit("TRIGGER_MANUAL_RESTORE_POINT");
         }
     };
-    handleClickSeeCommunity (waitForUpdate) {
+    handleClickSeeCommunity(waitForUpdate) {
         if (this.props.shouldSaveBeforeTransition()) {
             this.props.autoUpdateProject(); // save before transitioning to project page
             waitForUpdate(true); // queue the transition to project page
@@ -319,7 +322,7 @@ class MenuBar extends React.Component {
             waitForUpdate(false); // immediately transition to project page
         }
     }
-    handleClickShare (waitForUpdate) {
+    handleClickShare(waitForUpdate) {
         if (!this.props.isShared) {
             if (this.props.canShare) { // save before transitioning to project page
                 this.props.onShare();
@@ -332,7 +335,7 @@ class MenuBar extends React.Component {
             }
         }
     }
-    handleSetMode (mode) {
+    handleSetMode(mode) {
         return () => {
             // Turn on/off filters for modes.
             if (mode === '1920') {
@@ -362,20 +365,20 @@ class MenuBar extends React.Component {
             this.props.onSetTimeTravelMode(mode);
         };
     }
-    handleRestoreOption (restoreFun) {
+    handleRestoreOption(restoreFun) {
         return () => {
             restoreFun();
             this.props.onRequestCloseEdit();
         };
     }
-    handleKeyPress (event) {
+    handleKeyPress(event) {
         const modifier = bowser.mac ? event.metaKey : event.ctrlKey;
         if (modifier && event.key.toLowerCase() === 's') {
             this.props.handleSaveProject();
             event.preventDefault();
         }
     }
-    getSaveToComputerHandler (downloadProjectCallback) {
+    getSaveToComputerHandler(downloadProjectCallback) {
         return () => {
             this.props.onRequestCloseFile();
             downloadProjectCallback();
@@ -385,12 +388,12 @@ class MenuBar extends React.Component {
             }
         };
     }
-    handleToggleAutosave () {
+    handleToggleAutosave() {
         // Instead of enabling/disabling, just pause/resume the timer
         this.setState(prevState => ({ autosavePaused: !prevState.autosavePaused }));
         this.props.onRequestCloseFile();
     }
-    getAutosaveEnabled () {
+    getAutosaveEnabled() {
         // Check if autosave addon is enabled and use its settings
         const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
 
@@ -400,10 +403,10 @@ class MenuBar extends React.Component {
             return this.props.autosaveEnabled;
         }
     }
-    getAutosaveTimeRemaining () {
+    getAutosaveTimeRemaining() {
         return this.state.autosaveTimeRemaining;
     }
-    startAutosaveCountdown () {
+    startAutosaveCountdown() {
         // Clear existing interval
         if (this.autosaveCountdownInterval) {
             clearInterval(this.autosaveCountdownInterval);
@@ -449,7 +452,7 @@ class MenuBar extends React.Component {
             });
         }, 1000);
     }
-    performAutosave () {
+    performAutosave() {
         // Save to the current file using the same method as manual save
         if (this.props.handleSaveProject) {
             this.props.handleSaveProject();
@@ -467,7 +470,7 @@ class MenuBar extends React.Component {
             }
         }
     }
-    showAutosaveNotification (message, type = 'info') {
+    showAutosaveNotification(message, type = 'info') {
         // Create notification element
         const notification = document.createElement('div');
         notification.className = `autosave-notification autosave-${type}`;
@@ -520,7 +523,7 @@ class MenuBar extends React.Component {
             }, 300);
         }, 3000);
     }
-    formatTimeRemaining (seconds) {
+    formatTimeRemaining(seconds) {
         if (seconds <= 0) return '';
 
         const minutes = Math.floor(seconds / 60);
@@ -532,39 +535,39 @@ class MenuBar extends React.Component {
             return `${remainingSeconds}s`;
         }
     }
-    restoreOptionMessage (deletedItem) {
+    restoreOptionMessage(deletedItem) {
         switch (deletedItem) {
-        case 'Sprite':
-            return (<FormattedMessage
-                defaultMessage="Restore Sprite"
-                description="Menu bar item for restoring the last deleted sprite."
-                id="gui.menuBar.restoreSprite"
-            />);
-        case 'Sound':
-            return (<FormattedMessage
-                defaultMessage="Restore Sound"
-                description="Menu bar item for restoring the last deleted sound."
-                id="gui.menuBar.restoreSound"
-            />);
-        case 'Costume':
-            return (<FormattedMessage
-                defaultMessage="Restore Costume"
-                description="Menu bar item for restoring the last deleted costume."
-                id="gui.menuBar.restoreCostume"
-            />);
-        default: {
-            return (<FormattedMessage
-                defaultMessage="Restore"
-                description="Menu bar item for restoring the last deleted item in its disabled state." /* eslint-disable-line max-len */
-                id="gui.menuBar.restore"
-            />);
-        }
+            case 'Sprite':
+                return (<FormattedMessage
+                    defaultMessage="Restore Sprite"
+                    description="Menu bar item for restoring the last deleted sprite."
+                    id="gui.menuBar.restoreSprite"
+                />);
+            case 'Sound':
+                return (<FormattedMessage
+                    defaultMessage="Restore Sound"
+                    description="Menu bar item for restoring the last deleted sound."
+                    id="gui.menuBar.restoreSound"
+                />);
+            case 'Costume':
+                return (<FormattedMessage
+                    defaultMessage="Restore Costume"
+                    description="Menu bar item for restoring the last deleted costume."
+                    id="gui.menuBar.restoreCostume"
+                />);
+            default: {
+                return (<FormattedMessage
+                    defaultMessage="Restore"
+                    description="Menu bar item for restoring the last deleted item in its disabled state." /* eslint-disable-line max-len */
+                    id="gui.menuBar.restore"
+                />);
+            }
         }
     }
-    handleClickSeeInside () {
+    handleClickSeeInside() {
         this.props.onClickSeeInside();
     }
-    buildAboutMenu (onClickAbout) {
+    buildAboutMenu(onClickAbout) {
         if (!onClickAbout) {
             // hide the button
             return null;
@@ -607,13 +610,13 @@ class MenuBar extends React.Component {
             </MenuLabel>
         );
     }
-    wrapAboutMenuCallback (callback) {
+    wrapAboutMenuCallback(callback) {
         return () => {
             callback();
             this.props.onRequestCloseAbout();
         };
     }
-    render () {
+    render() {
         const saveNowMessage = (
             <FormattedMessage
                 defaultMessage="Save now"
@@ -636,11 +639,14 @@ class MenuBar extends React.Component {
             />
         );
         const newProjectMessage = (
-            <FormattedMessage
-                defaultMessage="New"
-                description="Menu bar item for creating a new project"
-                id="gui.menuBar.new"
-            />
+            <div>
+                <FilePlusCorner />
+                <FormattedMessage
+                    defaultMessage="New"
+                    description="Menu bar item for creating a new project"
+                    id="gui.menuBar.new"
+                />
+            </div>
         );
         const remixButton = (
             <Button
@@ -649,7 +655,7 @@ class MenuBar extends React.Component {
                     styles.remixButton
                 )}
                 iconClassName={styles.remixButtonIcon}
-                iconSrc={remixIcon}
+                iconElem={Shuffle}
                 onClick={this.handleClickRemix}
             >
                 {remixMessage}
@@ -689,18 +695,8 @@ class MenuBar extends React.Component {
                                 onOpen={this.props.onClickErrors}
                                 onClose={this.props.onRequestCloseErrors}
                             >
-                                <img
-                                    src={errorIcon}
-                                    draggable={false}
-                                    width={20}
-                                    height={20}
-                                />
-                                <img
-                                    src={dropdownCaret}
-                                    draggable={false}
-                                    width={8}
-                                    height={5}
-                                />
+                                <TriangleAlert size={20} />
+                                <ChevronDown size={8} />
                                 <MenuBarMenu
                                     className={classNames(styles.menuBarMenu)}
                                     open={this.props.errorsMenuOpen}
@@ -723,7 +719,7 @@ class MenuBar extends React.Component {
                                         </MenuItemLink>
                                     </MenuSection>
                                     <MenuSection>
-                                        {this.props.errors.map(({id, sprite, error}) => (
+                                        {this.props.errors.map(({ id, sprite, error }) => (
                                             <MenuItem key={id}>
                                                 {this.props.intl.formatMessage(twMessages.compileError, {
                                                     sprite,
@@ -741,11 +737,10 @@ class MenuBar extends React.Component {
                                 onOpen={this.props.onClickFile}
                                 onClose={this.props.onRequestCloseFile}
                             >
-                                <img
-                                    src={fileIcon}
-                                    draggable={false}
+                                <FilePen
                                     width={20}
                                     height={20}
+                                    size={20}
                                 />
                                 <span className={styles.collapsibleLabel}>
                                     <FormattedMessage
@@ -754,12 +749,7 @@ class MenuBar extends React.Component {
                                         id="gui.menuBar.file"
                                     />
                                 </span>
-                                <img
-                                    src={dropdownCaret}
-                                    draggable={false}
-                                    width={8}
-                                    height={5}
-                                />
+                                <ChevronDown size={8} />
                                 <MenuBarMenu
                                     className={classNames(styles.menuBarMenu)}
                                     open={this.props.fileMenuOpen}
@@ -792,9 +782,12 @@ class MenuBar extends React.Component {
                                                 </MenuItem>
                                             )}
                                             {this.props.canCreateCopy && (
-                                                <MenuItem onClick={this.handleClickSaveAsCopy}>
-                                                    {createCopyMessage}
-                                                </MenuItem>
+                                                <div>
+                                                    <Save />
+                                                    <MenuItem onClick={this.handleClickSaveAsCopy}>
+                                                        {createCopyMessage}
+                                                    </MenuItem>
+                                                </div>
                                             )}
                                             {this.props.canRemix && (
                                                 <MenuItem onClick={this.handleClickRemix}>
@@ -807,6 +800,7 @@ class MenuBar extends React.Component {
                                         <MenuItem
                                             onClick={this.props.onStartSelectingFileUpload}
                                         >
+                                            <Upload />
                                             {this.props.intl.formatMessage(sharedMessages.loadFromComputerTitle)}
                                         </MenuItem>
                                         <SB3Downloader
@@ -845,6 +839,7 @@ class MenuBar extends React.Component {
                                                         <MenuItem
                                                             onClick={this.getSaveToComputerHandler(downloadProject)}
                                                         >
+                                                            <Download />
                                                             {extended.available ? (
                                                                 <FormattedMessage
                                                                     defaultMessage="Save to separate file..."
@@ -870,6 +865,7 @@ class MenuBar extends React.Component {
                                             <MenuItem
                                                 onClick={this.handleClickPackager}
                                             >
+                                                <Package />
                                                 <FormattedMessage
                                                     defaultMessage="Package project"
                                                     // eslint-disable-next-line max-len
@@ -881,6 +877,7 @@ class MenuBar extends React.Component {
                                     )}
                                     <MenuSection>
                                         <MenuItem onClick={this.handleClickRestorePoints}>
+                                            <RefreshCcw />
                                             <FormattedMessage
                                                 defaultMessage="Restore points"
                                                 description="Menu bar item to manage restore points"
@@ -888,6 +885,7 @@ class MenuBar extends React.Component {
                                             />
                                         </MenuItem>
                                         <MenuItem onClick={this.handleClickAddRestorePoint}>
+                                            <ClockPlus />
                                             <FormattedMessage
                                                 defaultMessage="Create restore point"
                                                 description="Menu bar item to create a manual restore point immediately"
@@ -898,7 +896,7 @@ class MenuBar extends React.Component {
                                     {this.getAutosaveEnabled() && (
                                         <MenuSection>
                                             <MenuItem onClick={this.handleToggleAutosave}>
-                                                <span className={classNames({[styles.inactive]: this.state.autosavePaused})}>
+                                                <span className={classNames({ [styles.inactive]: this.state.autosavePaused })}>
                                                     {this.state.autosavePaused ? '⏸' : '✓'}
                                                 </span>
                                                 {' '}
@@ -916,7 +914,7 @@ class MenuBar extends React.Component {
                                                     />
                                                 )}
                                                 {this.getAutosaveTimeRemaining() > 0 && (
-                                                    <span style={{marginLeft: '8px', fontSize: '0.9em', opacity: this.state.autosavePaused ? 0.5 : 0.7}}>
+                                                    <span style={{ marginLeft: '8px', fontSize: '0.9em', opacity: this.state.autosavePaused ? 0.5 : 0.7 }}>
                                                         ({this.formatTimeRemaining(this.getAutosaveTimeRemaining())})
                                                         {this.state.autosavePaused && ' ⏸'}
                                                     </span>
@@ -932,12 +930,7 @@ class MenuBar extends React.Component {
                             onOpen={this.props.onClickEdit}
                             onClose={this.props.onRequestCloseEdit}
                         >
-                            <img
-                                src={editIcon}
-                                draggable={false}
-                                width={20}
-                                height={20}
-                            />
+                            <PencilRuler size={20} />
                             <span className={styles.collapsibleLabel}>
                                 <FormattedMessage
                                     defaultMessage="Edit"
@@ -945,30 +938,27 @@ class MenuBar extends React.Component {
                                     id="gui.menuBar.edit"
                                 />
                             </span>
-                            <img
-                                src={dropdownCaret}
-                                draggable={false}
-                                width={8}
-                                height={5}
-                            />
+                            <ChevronDown size={8} />
                             <MenuBarMenu
                                 className={classNames(styles.menuBarMenu)}
                                 open={this.props.editMenuOpen}
                                 place={this.props.isRtl ? 'left' : 'right'}
                             >
                                 {this.props.isPlayerOnly ? null : (
-                                    <DeletionRestorer>{(handleRestore, {restorable, deletedItem}) => (
+                                    <DeletionRestorer>{(handleRestore, { restorable, deletedItem }) => (
                                         <MenuItem
-                                            className={classNames({[styles.disabled]: !restorable})}
+                                            className={classNames({ [styles.disabled]: !restorable })}
                                             onClick={this.handleRestoreOption(handleRestore)}
                                         >
+                                            <ArchiveRestore />
                                             {this.restoreOptionMessage(deletedItem)}
                                         </MenuItem>
                                     )}</DeletionRestorer>
                                 )}
                                 <MenuSection>
-                                    <TurboMode>{(toggleTurboMode, {turboMode}) => (
+                                    <TurboMode>{(toggleTurboMode, { turboMode }) => (
                                         <MenuItem onClick={toggleTurboMode}>
+                                            <Gauge />
                                             {turboMode ? (
                                                 <FormattedMessage
                                                     defaultMessage="Turn off Turbo Mode"
@@ -984,8 +974,9 @@ class MenuBar extends React.Component {
                                             )}
                                         </MenuItem>
                                     )}</TurboMode>
-                                    <FramerateChanger>{(changeFramerate, {framerate}) => (
+                                    <FramerateChanger>{(changeFramerate, { framerate }) => (
                                         <MenuItem onClick={changeFramerate}>
+                                            <FastForward />
                                             {framerate === 60 ? (
                                                 <FormattedMessage
                                                     defaultMessage="Turn off 60 FPS Mode"
@@ -1003,6 +994,7 @@ class MenuBar extends React.Component {
                                     )}</FramerateChanger>
                                     <ChangeUsername>{changeUsername => (
                                         <MenuItem onClick={changeUsername}>
+                                            <UserPen />
                                             <FormattedMessage
                                                 defaultMessage="Change Username"
                                                 description="Menu bar item for changing the username"
@@ -1010,11 +1002,12 @@ class MenuBar extends React.Component {
                                             />
                                         </MenuItem>
                                     )}</ChangeUsername>
-                                    <CloudVariablesToggler>{(toggleCloudVariables, {enabled, canUseCloudVariables}) => (
+                                    <CloudVariablesToggler>{(toggleCloudVariables, { enabled, canUseCloudVariables }) => (
                                         <MenuItem
-                                            className={classNames({[styles.disabled]: !canUseCloudVariables})}
+                                            className={classNames({ [styles.disabled]: !canUseCloudVariables })}
                                             onClick={toggleCloudVariables}
                                         >
+                                            <Cloud />
                                             {canUseCloudVariables ? (
                                                 enabled ? (
                                                     <FormattedMessage
@@ -1042,6 +1035,7 @@ class MenuBar extends React.Component {
                                 </MenuSection>
                                 <MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
+                                        <Settings />
                                         <FormattedMessage
                                             defaultMessage="Project Settings"
                                             description="Menu bar item for project settings"
@@ -1050,6 +1044,7 @@ class MenuBar extends React.Component {
                                     </MenuItem>
                                     {this.props.onClickAddonSettings && (
                                         <MenuItem onClick={this.props.onClickAddonSettings}>
+                                            <Puzzle />
                                             <FormattedMessage
                                                 defaultMessage="Addons"
                                                 description="Menu bar item for addon settings"
@@ -1058,6 +1053,7 @@ class MenuBar extends React.Component {
                                         </MenuItem>
                                     )}
                                     <MenuItem onClick={this.props.onOpenExtensionLibrary}>
+                                        <PackagePlus />
                                         <FormattedMessage
                                             defaultMessage="Extensions"
                                             description="Menu bar item for extensions"
@@ -1085,7 +1081,7 @@ class MenuBar extends React.Component {
                                 >
                                     <MenuSection>
                                         <MenuItem onClick={this.handleSetMode('NOW')}>
-                                            <span className={classNames({[styles.inactive]: !this.props.modeNow})}>
+                                            <span className={classNames({ [styles.inactive]: !this.props.modeNow })}>
                                                 {'✓'}
                                             </span>
                                             {' '}
@@ -1096,7 +1092,7 @@ class MenuBar extends React.Component {
                                             />
                                         </MenuItem>
                                         <MenuItem onClick={this.handleSetMode('2020')}>
-                                            <span className={classNames({[styles.inactive]: !this.props.mode2020})}>
+                                            <span className={classNames({ [styles.inactive]: !this.props.mode2020 })}>
                                                 {'✓'}
                                             </span>
                                             {' '}
@@ -1162,7 +1158,7 @@ class MenuBar extends React.Component {
                                                 onClick={() => {
                                                     this.handleClickShare(waitForUpdate);
                                                 }}
-                                                /* eslint-enable react/jsx-no-bind */
+                                            /* eslint-enable react/jsx-no-bind */
                                             />
                                         )
                                     }
@@ -1193,7 +1189,7 @@ class MenuBar extends React.Component {
                                                 onClick={() => {
                                                     this.handleClickSeeCommunity(waitForUpdate);
                                                 }}
-                                                /* eslint-enable react/jsx-no-bind */
+                                            /* eslint-enable react/jsx-no-bind */
                                             />
                                         )
                                     }

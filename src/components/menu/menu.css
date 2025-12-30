@@ -9,11 +9,16 @@
     background-color: $ui-secondary;
     color: $text-primary;
     padding: 0;
+    padding-bottom: 5px;
     margin: 0;
     margin-top: 4px;
     min-width: 186px;
     overflow: visible;
     box-shadow: 0 4px 12px 0 $looks-secondary;
+}
+
+.submenu .menu::before {
+  content: none;
 }
 
 .menu.left {
@@ -33,6 +38,19 @@
     margin: 0;
     font-weight: bold;
     position: relative;
+}
+
+.menu-item img {
+    color: $text-primary;
+}
+
+.menu-item svg {
+    color: $text-primary;
+    vertical-align: middle;
+}
+
+.menu-item :global(svg.lucide) {
+    margin-right: 0.5rem;
 }
 
 .menu-item.active,
@@ -67,7 +85,7 @@
     right: 100%;
 }
 
-.submenu > .menu {
+.submenu>.menu {
     position: relative;
     overflow-y: auto;
     overflow-x: hidden;
@@ -75,25 +93,25 @@
     border-radius: 8px;
 }
 
-.menu-item.expanded > .submenu {
+.menu-item.expanded>.submenu {
     display: block;
 }
 
-:not(:has(> .menu-item.expanded)) > .menu-item:hover > .submenu {
+:not(:has(> .menu-item.expanded))>.menu-item:hover>.submenu {
     display: block;
 }
 
 /* Fallback styling for webkit browsers that don't support scrollbar-color */
 
-.submenu > .menu::-webkit-scrollbar {
+.submenu>.menu::-webkit-scrollbar {
     width: 12px;
 }
 
-.submenu > .menu::-webkit-scrollbar-track {
+.submenu>.menu::-webkit-scrollbar-track {
     background: $menu-bar-background;
 }
 
-.submenu > .menu::-webkit-scrollbar-thumb {
+.submenu>.menu::-webkit-scrollbar-thumb {
     background-color: $menu-bar-foreground;
     border-radius: 12px;
     border: 3px solid $menu-bar-background;
