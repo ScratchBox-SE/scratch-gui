@@ -43,6 +43,9 @@ import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
 import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
 
+import {manualUpdateProject} from "../reducers/project-state.js";
+import {showAlertWithTimeout} from "../reducers/alerts.js";
+
 import styles from './interface.css';
 
 const baseURL = `${window.location.protocol}//${window.location.hostname == "localhost" ? "localhost:3000" : window.location.hostname.replace("editor.", "", 1)}`;
@@ -293,6 +296,9 @@ class Interface extends React.Component {
     async onClickSave(projectId) {
         if (projectId == '0') return;
 
+        this.props.beginUpdatingProject();
+        this.props.onShowSavingAlert();
+
         // const userInfo = (await (await fetch(baseURL + "/api/auth/me", { credentials: "include" })).json()).user;
         const projectInfo = await (await fetch(baseURL + `/api/project/${projectId}`)).json();
 
@@ -318,6 +324,8 @@ class Interface extends React.Component {
                 private: projectInfo.private
             })
         });
+
+        this.props.onShowSaveSuccessAlert();
     }
 
     constructor (props) {
@@ -491,7 +499,10 @@ Interface.propTypes = {
     isLoading: PropTypes.bool,
     isPlayerOnly: PropTypes.bool,
     isRtl: PropTypes.bool,
-    projectId: PropTypes.string
+    projectId: PropTypes.string,
+    onShowSavingAlert: PropTypes.func,
+    onShowSaveSuccessAlert: PropTypes.func,
+    beginUpdatingProject: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -505,7 +516,11 @@ const mapStateToProps = state => ({
     projectId: state.scratchGui.projectState.projectId
 });
 
-const mapDispatchToProps = () => ({});
+const mapDispatchToProps = dispatch => ({
+    onShowSavingAlert: () => showAlertWithTimeout(dispatch, 'saving'),
+    onShowSaveSuccessAlert: () => showAlertWithTimeout(dispatch, 'saveSuccess'),
+    beginUpdatingProject: () => dispatch(manualUpdateProject()),
+});
 
 const ConnectedInterface = injectIntl(connect(
     mapStateToProps,
