@@ -5,7 +5,7 @@ const searchParams = new URLSearchParams(location.search);
 const cloudHost = searchParams.get('cloud_host') || 'wss://clouddata.turbowarp.org';
 
 const onClickLogo = () => {
-    window.location = 'https://scratchbox.grady.link';
+    window.location = 'https://' + window.location.hostname.replace("editor.", "", 1);
 };
 
 const RenderGUI = props => (

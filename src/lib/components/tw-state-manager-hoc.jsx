@@ -60,7 +60,7 @@ const getLocalStorage = key => {
 };
 
 const readHashProjectId = () => {
-    const match = location.hash.match(/#(\d+)/);
+    const match = location.hash.match(/#([a-z\d]+)/i);
     return match === null ? null : match[1];
 };
 
