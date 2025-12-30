@@ -56,7 +56,7 @@ let WindowManager = null;
 let settingsWindow = null;
 
 const onClickLogo = () => {
-    window.location = 'https://scratchbox.grady.link';
+    window.location = baseURL;
 };
 
 const loadWindowManager = async () => {
