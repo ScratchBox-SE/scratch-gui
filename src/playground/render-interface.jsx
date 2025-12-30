@@ -385,7 +385,8 @@ class Interface extends React.Component {
                         backpackHost="_local_"
                         onClickLogo={onClickLogo}
                         canEditTitle={false}
-                        enableCommunity={false}
+                        enableCommunity={projectId != '0'}
+                        onSeeCommunity={() => window.location = `${baseURL}/project/${projectId}`}
                         onClickSave={() => this.onClickSave(projectId)}
                         {...props}
                     />
