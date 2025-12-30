@@ -3,12 +3,12 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import {injectIntl, intlShape, defineMessages} from 'react-intl';
 
-import monitorAdapter from '../lib/monitor-adapter.js';
+import monitorAdapter from '../lib/utils/monitor-adapter.js';
 import MonitorComponent, {monitorModes} from '../components/monitor/monitor.jsx';
 import {addMonitorRect, getInitialPosition, resizeMonitorRect, removeMonitorRect} from '../reducers/monitor-layout';
-import {getVariable, setVariableValue} from '../lib/variable-utils';
-import importCSV from '../lib/import-csv';
-import downloadBlob from '../lib/download-blob';
+import {getVariable, setVariableValue} from '../lib/utils/variables';
+import importCSV from '../lib/utils/import-csv.js';
+import downloadBlob from '../lib/utils/download-blob';
 import {Theme} from '../lib/themes';
 import SliderPrompt from './slider-prompt.jsx';
 
@@ -280,7 +280,7 @@ Monitor.propTypes = {
     y: PropTypes.number
 };
 Monitor.defaultProps = {
-    theme: Theme.light
+    theme: Theme.defaults.light
 };
 const mapStateToProps = state => ({
     monitorLayout: state.scratchGui.monitorLayout,

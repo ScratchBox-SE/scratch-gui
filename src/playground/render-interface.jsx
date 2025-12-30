@@ -22,14 +22,14 @@ import {compose} from 'redux';
 import {FormattedMessage, defineMessages, injectIntl, intlShape} from 'react-intl';
 import {getIsLoading} from '../reducers/project-state.js';
 // import DOMElementRenderer from '../containers/dom-element-renderer.jsx';
-import AppStateHOC from '../lib/app-state-hoc.jsx';
-import ErrorBoundaryHOC from '../lib/error-boundary-hoc.jsx';
-import TWProjectMetaFetcherHOC from '../lib/tw-project-meta-fetcher-hoc.jsx';
-import TWStateManagerHOC from '../lib/tw-state-manager-hoc.jsx';
-import SBFileUploaderHOC from '../lib/sb-file-uploader-hoc.jsx';
-import TWPackagerIntegrationHOC from '../lib/tw-packager-integration-hoc.jsx';
+import AppStateHOC from '../lib/components/app-state-hoc.jsx';
+import ErrorBoundaryHOC from '../lib/components/error-boundary-hoc.jsx';
+import TWProjectMetaFetcherHOC from '../lib/components/tw-project-meta-fetcher-hoc.jsx';
+import TWStateManagerHOC from '../lib/components/tw-state-manager-hoc.jsx';
+import SBFileUploaderHOC from '../lib/components/sb-file-uploader-hoc.jsx';
+import TWPackagerIntegrationHOC from '../lib/components/tw-packager-integration-hoc.jsx';
 import SettingsStore from '../addons/settings-store-singleton';
-import '../lib/tw-fix-history-api';
+import '../lib/api/fix-history.js';
 import GUI from './render-gui.jsx';
 import MenuBar from '../components/menu-bar/menu-bar.jsx';
 import ProjectInput from '../components/tw-project-input/project-input.jsx';
@@ -37,11 +37,11 @@ import FeaturedProjects from '../components/tw-featured-projects/featured-projec
 import Description from '../components/tw-description/description.jsx';
 import BrowserModal from '../components/browser-modal/browser-modal.jsx';
 import CloudVariableBadge from '../containers/tw-cloud-variable-badge.jsx';
-import {isBrowserSupported} from '../lib/tw-environment-support-prober';
+import {isBrowserSupported} from '../lib/utils/tw-environment-support-prober';
 import AddonChannels from '../addons/channels';
 import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
-import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/brand.js';
+import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
 
 import styles from './interface.css';
 

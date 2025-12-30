@@ -50,6 +50,7 @@ const guiColors = {
   "looks-secondary-dark": "#f9aa37",
 
   "menu-bar-background": "var(--looks-secondary)",
+  "menu-bar-background-image": "none",
 };
 
 const blockColors = {

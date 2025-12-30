@@ -35,7 +35,7 @@ import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import TWSaveStatus from './tw-save-status.jsx';
 
-import {FEEDBACK_URL} from '../../lib/brand.js';
+import {FEEDBACK_URL} from '../../lib/constants/brand.js';
 
 import {openTipsLibrary, openSettingsModal, openRestorePointModal} from '../../reducers/modals';
 import {setPlayer} from '../../reducers/mode';
@@ -90,7 +90,6 @@ import {
 } from '../../reducers/autosave.js';
 
 import collectMetadata from '../../lib/collect-metadata';
-import AutosaveService from '../../lib/autosave-service.js';
 import SettingsStore from '../../addons/settings-store-singleton.js';
 
 import styles from './menu-bar.css';
@@ -104,7 +103,6 @@ import aboutIcon from './icon--about.svg';
 import fileIcon from './icon--file.svg';
 import editIcon from './icon--edit.svg';
 import errorIcon from './tw-error.svg';
-import advancedIcon from './tw-advanced.svg';
 
 import scratchBoxLogo from './scratchbox-logo.svg';
 import ninetiesLogo from './nineties_logo.svg';
@@ -112,11 +110,11 @@ import catLogo from './cat_logo.svg';
 import prehistoricLogo from './prehistoric-logo.svg';
 import oldtimeyLogo from './oldtimey-logo.svg';
 
-import sharedMessages from '../../lib/shared-messages';
+import sharedMessages from '../../lib/constants/shared-messages';
 
 import SeeInsideButton from './tw-see-inside.jsx';
-import {notScratchDesktop} from '../../lib/isScratchDesktop.js';
-import {APP_NAME} from '../../lib/brand.js';
+import {notScratchDesktop} from '../../lib/utils/isScratchDesktop.js';
+import {APP_NAME} from '../../lib/constants/brand.js';
 
 /* const ariaMessages = defineMessages({
     tutorials: {
@@ -669,9 +667,7 @@ class MenuBar extends React.Component {
                 <div className={classNames(
                     styles.mainMenu,
                     {
-                        [styles['main-menu-align-left']]: this.props.theme.menuBarAlign === 'left',
-                        [styles['main-menu-align-center']]: this.props.theme.menuBarAlign === 'center',
-                        [styles['main-menu-align-right']]: this.props.theme.menuBarAlign === 'right'
+                        [styles['main-menu-align-' + (this.props.theme.menuBarAlign || 'center')]]: true
                     }
                 )}>
                     <div className={styles.fileGroup}>

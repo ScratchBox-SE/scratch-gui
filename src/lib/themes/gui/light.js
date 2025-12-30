@@ -1,3 +1,5 @@
+import icon from '../icons/light.svg';
+
 const guiColors = {
     'color-scheme': 'light',
 
@@ -89,6 +91,7 @@ const guiColors = {
 const blockColors = {};
 
 export {
+    icon,
     guiColors,
     blockColors
 };
