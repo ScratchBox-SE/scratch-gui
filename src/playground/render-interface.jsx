@@ -45,6 +45,7 @@ import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
 
 import {manualUpdateProject} from "../reducers/project-state.js";
 import {showAlertWithTimeout} from "../reducers/alerts.js";
+import {setProjectTitle} from "../reducers/project-title.js";
 
 import styles from './interface.css';
 
@@ -312,13 +313,13 @@ class Interface extends React.Component {
             credentials: "include",
             body: JSON.stringify({
                 file: {
-                    name: projectInfo.name + ".sb3",
+                    name: this.props.projectTitle + ".sb3",
                     size: projectBlob.size,
                     type: 'application/x.scratch.sb3',
                     lastModified: Date.now(),
                     content: await blobToDataURL(projectBlob)
                 },
-                name: projectInfo.name,
+                name: this.props.projectTitle,
                 description: projectInfo.description,
                 platforms: projectInfo.platforms,
                 private: projectInfo.private
@@ -330,6 +331,12 @@ class Interface extends React.Component {
 
     constructor (props) {
         super(props);
+
+        setTimeout(async () => {
+            if (this.props.projectId == '0') return;
+            const projectInfo = await (await fetch(baseURL + `/api/project/${this.props.projectId}`)).json();
+            this.props.setProjectTitle(projectInfo.name);
+        }, 0);
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
@@ -384,7 +391,6 @@ class Interface extends React.Component {
                         backpackVisible
                         backpackHost="_local_"
                         onClickLogo={onClickLogo}
-                        canEditTitle={false}
                         enableCommunity={projectId != '0'}
                         onSeeCommunity={() => window.location = `${baseURL}/project/${projectId}`}
                         onClickSave={() => this.onClickSave(projectId)}
@@ -503,7 +509,9 @@ Interface.propTypes = {
     projectId: PropTypes.string,
     onShowSavingAlert: PropTypes.func,
     onShowSaveSuccessAlert: PropTypes.func,
-    beginUpdatingProject: PropTypes.func
+    beginUpdatingProject: PropTypes.func,
+    projectTitle: PropTypes.string,
+    setProjectTitle: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -514,13 +522,15 @@ const mapStateToProps = state => ({
     isLoading: getIsLoading(state.scratchGui.projectState.loadingState),
     isPlayerOnly: state.scratchGui.mode.isPlayerOnly,
     isRtl: state.locales.isRtl,
-    projectId: state.scratchGui.projectState.projectId
+    projectId: state.scratchGui.projectState.projectId,
+    projectTitle: state.scratchGui.projectTitle
 });
 
 const mapDispatchToProps = dispatch => ({
     onShowSavingAlert: () => showAlertWithTimeout(dispatch, 'saving'),
     onShowSaveSuccessAlert: () => showAlertWithTimeout(dispatch, 'saveSuccess'),
     beginUpdatingProject: () => dispatch(manualUpdateProject()),
+    setProjectTitle: (title) => dispatch(setProjectTitle(title))
 });
 
 const ConnectedInterface = injectIntl(connect(
