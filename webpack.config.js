@@ -150,7 +150,7 @@ module.exports = [
     defaultsDeep({}, base, {
         entry: {
             'editor': './src/playground/editor.jsx',
-            'player': './src/playground/player.jsx',
+            'player': './src/playground/editor.jsx',
             'fullscreen': './src/playground/fullscreen.jsx',
             'embed': './src/playground/embed.jsx',
             'addon-settings': './src/playground/addon-settings.jsx',
@@ -191,16 +191,17 @@ module.exports = [
             new HtmlWebpackPlugin({
                 chunks: ['editor'],
                 template: 'src/playground/index.ejs',
-                filename: 'editor.html',
+                filename: 'index.html',
                 title: `${APP_NAME} - Enhance Your Scratch Experience`,
                 isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
-                chunks: ['player'],
+                chunks: ['editor'],
                 template: 'src/playground/index.ejs',
-                filename: 'index.html',
+                filename: 'editor.html',
                 title: `${APP_NAME} - Enhance Your Scratch Experience`,
+                isEditor: true,
                 ...htmlWebpackPluginCommon
             }),
             new HtmlWebpackPlugin({
