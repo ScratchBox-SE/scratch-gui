@@ -395,7 +395,7 @@ class MenuBar extends React.Component {
     getAutosaveEnabled () {
         // Check if autosave addon is enabled and use its settings
         const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
-        
+
         if (isAutosaveAddonEnabled) {
             return SettingsStore.getAddonSetting('autosave', 'enabled');
         } else {
@@ -410,27 +410,27 @@ class MenuBar extends React.Component {
         if (this.autosaveCountdownInterval) {
             clearInterval(this.autosaveCountdownInterval);
         }
-        
+
         // Don't start countdown if autosave is disabled
         if (!this.getAutosaveEnabled()) {
             this.setState({ autosaveTimeRemaining: 0 });
             return;
         }
-        
+
         // Get interval from addon settings or Redux state
         const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
         let intervalMinutes;
-        
+
         if (isAutosaveAddonEnabled) {
             intervalMinutes = SettingsStore.getAddonSetting('autosave', 'interval') || 5;
         } else {
             intervalMinutes = this.props.autosaveInterval || 5;
         }
-        
+
         // Set initial time
         const totalSeconds = intervalMinutes * 60;
         this.setState({ autosaveTimeRemaining: totalSeconds });
-        
+
         // Start countdown
         this.autosaveCountdownInterval = setInterval(() => {
             this.setState(prevState => {
@@ -438,9 +438,9 @@ class MenuBar extends React.Component {
                 if (prevState.autosavePaused) {
                     return prevState; // No change
                 }
-                
+
                 const newTime = prevState.autosaveTimeRemaining - 1;
-                
+
                 if (newTime <= 0) {
                     // Time to autosave!
                     this.performAutosave();
@@ -455,15 +455,15 @@ class MenuBar extends React.Component {
         // Save to the current file using the same method as manual save
         if (this.props.handleSaveProject) {
             this.props.handleSaveProject();
-            
+
             // Show notification if enabled
             const isAutosaveAddonEnabled = SettingsStore.getAddonEnabled('autosave');
             let showNotifications = true;
-            
+
             if (isAutosaveAddonEnabled) {
                 showNotifications = SettingsStore.getAddonSetting('autosave', 'showNotifications');
             }
-            
+
             if (showNotifications) {
                 this.showAutosaveNotification('Project autosaved successfully!', 'success');
             }
@@ -474,7 +474,7 @@ class MenuBar extends React.Component {
         const notification = document.createElement('div');
         notification.className = `autosave-notification autosave-${type}`;
         notification.textContent = message;
-        
+
         // Style the notification
         Object.assign(notification.style, {
             position: 'fixed',
@@ -491,7 +491,7 @@ class MenuBar extends React.Component {
             maxWidth: '300px',
             animation: 'slideInRight 0.3s ease-out'
         });
-        
+
         // Add CSS for animation if not already present
         if (!document.getElementById('autosave-notification-styles')) {
             const style = document.createElement('style');
@@ -508,10 +508,10 @@ class MenuBar extends React.Component {
             `;
             document.head.appendChild(style);
         }
-        
+
         // Add to page
         document.body.appendChild(notification);
-        
+
         // Remove after 3 seconds
         setTimeout(() => {
             notification.style.animation = 'slideOutRight 0.3s ease-in';
@@ -524,10 +524,10 @@ class MenuBar extends React.Component {
     }
     formatTimeRemaining (seconds) {
         if (seconds <= 0) return '';
-        
+
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
-        
+
         if (minutes > 0) {
             return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
         } else {
@@ -1047,8 +1047,8 @@ class MenuBar extends React.Component {
                                 <MenuSection>
                                     <MenuItem onClick={this.props.onClickSettingsModal}>
                                         <FormattedMessage
-                                            defaultMessage="Settings"
-                                            description="Menu bar item for settings"
+                                            defaultMessage="Project Settings"
+                                            description="Menu bar item for project settings"
                                             id="tw.menuBar.moreSettings"
                                         />
                                     </MenuItem>

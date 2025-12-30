@@ -2,10 +2,31 @@
 
 .save-now {
     cursor: pointer;
-    padding: 0 0.5rem;
+    padding: 0 0.75rem;
+    padding-left: 1.25rem;
+    border-top-left-radius: 1.5rem;
+    border-bottom-left-radius: 1.5rem;
     height: 100%;
     display: flex;
     align-items: center;
+    position: absolute; /* absolute rotur */
+    top: 0px;
+    right: 0px;
+    background-color: rgba(0, 0, 0, 0.25);
+}
+
+[class^="menu-bar_main-menu-align-right"].save-now {
+    left: 0px;
+    right: unset;
+}
+
+.save-now {
+  transition: opacity 0.2s ease, transform 0.2s ease;
+
+  @starting-style {
+    opacity: 0;
+    transform: translateX(128px);
+  }
 }
 
 .save-now:hover {

@@ -166,7 +166,7 @@
   background: var(--looks-secondary, var(--looks-secondary-default, #4c97ff));
   color: var(--ui-white, var(--ui-white-default, #ffffff));
   padding: 1px 6px;
-  border-radius: 10px;
+  border-radius: $second-radius;
   font-size: 10px;
   font-weight: 500;
   min-width: 16px;
@@ -385,12 +385,12 @@
 }
 
 @keyframes fadeIn {
-  from { 
-    opacity: 0; 
+  from {
+    opacity: 0;
     transform: scale(0.95);
   }
-  to { 
-    opacity: 1; 
+  to {
+    opacity: 1;
     transform: scale(1);
   }
 }
@@ -415,31 +415,31 @@
   .sa-var-manager {
     padding: 8px;
   }
-  
+
   .sa-var-manager-header {
     flex-direction: column;
     gap: 8px;
     align-items: stretch;
   }
-  
+
   .sa-var-manager-search-container {
     max-width: none;
   }
-  
+
   .sa-var-manager-name {
     width: 40%;
     min-width: 100px;
   }
-  
+
   .sa-var-manager-value {
     width: 60%;
   }
-  
+
   .sa-var-manager-stats {
     justify-content: center;
     gap: 6px;
   }
-  
+
   .sa-var-manager-stats span {
     font-size: 9px;
     padding: 2px 6px;
@@ -450,21 +450,21 @@
   .sa-var-manager {
     padding: 6px;
   }
-  
+
   .sa-var-manager-header {
     margin-bottom: 8px;
     padding-bottom: 6px;
   }
-  
+
   .sa-var-manager-heading {
     font-size: 12px;
     padding: 4px 6px;
   }
-  
+
   .sa-var-manager td {
     padding: 6px 4px;
   }
-  
+
   .sa-var-manager-name-input,
   .sa-var-manager-value-input {
     font-size: 12px;
@@ -478,21 +478,21 @@
     background: var(--ui-primary, #2d3748);
     color: var(--text-primary, #ffffff);
   }
-  
+
   .sa-var-manager-searchbox {
     background-color: var(--input-background, #4a5568);
     color: var(--text-primary, #ffffff);
     border-color: var(--ui-black-transparent, rgba(255, 255, 255, 0.1));
   }
-  
+
   .sa-var-manager-table {
     background: var(--ui-white, #4a5568);
   }
-  
+
   .sa-var-manager-row {
     background: var(--ui-white, #4a5568);
   }
-  
+
   .sa-var-manager-row:nth-child(even) {
     background-color: var(--ui-secondary, rgba(255, 255, 255, 0.02));
   }

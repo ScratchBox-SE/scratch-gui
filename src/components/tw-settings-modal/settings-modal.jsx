@@ -19,8 +19,8 @@ const BufferedInput = BufferedInputHOC(Input);
 
 const messages = defineMessages({
     title: {
-        defaultMessage: 'Settings',
-        description: 'Title of settings modal',
+        defaultMessage: 'Project Settings',
+        description: 'Title of project settings modal',
         id: 'tw.settingsModal.title'
     },
     help: {
@@ -429,7 +429,7 @@ const StoreProjectOptions = ({onStoreProjectOptions}) => (
             <p>
                 <FormattedMessage
                     // eslint-disable-next-line max-len
-                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when {APP_NAME} loads this project. Warp timer and disable compiler will not be saved."
+                    defaultMessage="Stores the selected settings in the project so they will be automatically applied when {APP_NAME} or another TurboWarp-based editor loads this project. Warp timer and disable compiler will not be saved."
                     description="Help text for the store settings in project button"
                     id="tw.settingsModal.storeProjectOptionsHelp"
                     values={{
@@ -464,7 +464,7 @@ const SettingsModalComponent = props => (
         <Box className={styles.body}>
             <Header>
                 <FormattedMessage
-                    defaultMessage="Featured"
+                    defaultMessage="Basic"
                     description="Settings modal section"
                     id="tw.settingsModal.featured"
                 />
@@ -507,7 +507,7 @@ const SettingsModalComponent = props => (
             />
             <Header>
                 <FormattedMessage
-                    defaultMessage="Danger Zone"
+                    defaultMessage="Advanced"
                     description="Settings modal section"
                     id="tw.settingsModal.dangerZone"
                 />

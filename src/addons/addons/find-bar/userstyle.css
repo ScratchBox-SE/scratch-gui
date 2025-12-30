@@ -40,9 +40,9 @@
   height: 100%;
   box-sizing: border-box !important;
   /* !important required for extension, because CSS injection method (and hence order) differs from addon */
-  
+
   /* Match main tab styling */
-  border-radius: 10px;
+  border-radius: $second-radius;
   font-size: 0.75rem;
   padding: 0 60px 0 0.8rem; /* Add right padding for stats */
   background: var(--ui-tertiary, #e6f3ff);
@@ -247,15 +247,15 @@
     flex-wrap: wrap;
     gap: 4px;
   }
-  
+
   .sa-find-wrapper {
     min-width: 200px;
   }
-  
+
   .sa-find-controls {
     gap: 2px;
   }
-  
+
   .sa-find-toggle,
   .sa-find-nav {
     min-width: 24px;
@@ -314,17 +314,17 @@
     flex-wrap: wrap;
     justify-content: flex-start;
   }
-  
+
   .sa-find-toggle,
   .sa-find-nav {
     min-width: 32px;
     height: 28px;
   }
-  
+
   .sa-find-input {
     padding-right: 50px; /* Reduce padding on smaller screens */
   }
-  
+
   .sa-find-stats {
     min-width: 35px;
     font-size: 10px;

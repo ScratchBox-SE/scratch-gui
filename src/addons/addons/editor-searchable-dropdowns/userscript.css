@@ -10,7 +10,7 @@
   transition: all 0.2s ease;
   font-size: 13px;
   font-weight: bold;
-  border-radius: 10px; /* Match Code/Costumes/Sounds tab rounding */
+  border-radius: $second-radius; /* Match Code/Costumes/Sounds tab rounding */
 }
 .u-dropdown-searchbar:hover {
   border-color: var(--looks-secondary, #4c97ff);
