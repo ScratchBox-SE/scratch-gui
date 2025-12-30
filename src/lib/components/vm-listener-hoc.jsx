@@ -309,6 +309,10 @@ const vmListenerHOC = function (WrappedComponent) {
         onInterpolationChanged: interpolation => dispatch(setInterpolationState(interpolation)),
         onCompilerOptionsChanged: options => dispatch(setCompilerOptionsState(options)),
         onPlatformMismatch: (platform, callback) => {
+            if (platform.name == "TurboWarp") {
+                callback();
+                return;
+            }
             dispatch(setPlatformMismatchDetails(platform, callback));
             dispatch(openUnknownPlatformModal());
         },
