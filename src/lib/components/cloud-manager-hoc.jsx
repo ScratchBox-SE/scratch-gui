@@ -111,11 +111,36 @@ const cloudManagerHOC = function (WrappedComponent) {
             return this.cloudProvider && !!this.cloudProvider.connection;
         }
         connectToCloud () {
+            const fnv1a64 = (str) => {
+                const FNV_PRIME_64 = BigInt("1099511628211");
+                const FNV_OFFSET_BASIS_64 = BigInt("14695981039346656037");
+                const MODULO = BigInt("2") ** BigInt("64");
+
+                let hash = FNV_OFFSET_BASIS_64;
+
+                for (let i = 0; i < str.length; i++) {
+                    let charCode = BigInt(str.charCodeAt(i));
+                    
+                    hash ^= charCode;
+                    hash = (hash * FNV_PRIME_64) % MODULO;
+                }
+
+                return hash;
+            }
+
+            const MODULO_64 = BigInt("2") ** BigInt("64");
+            let assetHash = 0n;
+            for (const asset of this.props.vm.assets) {
+                const hash = fnv1a64(asset.assetId);
+                
+                assetHash = (assetHash + hash) % MODULO_64;
+            }
+
             this.cloudProvider = new CloudProvider(
                 this.props.reduxCloudHost,
                 this.props.vm,
                 this.props.username,
-                this.props.projectId);
+                `ScratchEverywhere/hash-${assetHash.toString(16).padStart(16, "0")}`);
             this.cloudProvider.onInvalidUsername = this.props.onInvalidUsername;
             this.props.vm.setCloudProvider(this.cloudProvider);
         }
