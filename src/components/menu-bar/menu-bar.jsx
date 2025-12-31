@@ -109,7 +109,7 @@ import oldtimeyLogo from './oldtimey-logo.svg';
 
 import {
     FilePen, PencilRuler, TriangleAlert, Info, Shuffle,
-    FilePlusCorner, Upload, Download, RefreshCcw, ClockPlus, Package,
+    FilePlusCorner, Upload, Download, RefreshCcw, ClockPlus, Package, FileInput,
     Save, ArchiveRestore, Gauge, FastForward, UserPen, Cloud, Settings, PackagePlus, Puzzle
 } from 'lucide-react';
 
@@ -813,6 +813,7 @@ class MenuBar extends React.Component {
                                                             {extended.name !== null && (
                                                                 // eslint-disable-next-line max-len
                                                                 <MenuItem onClick={this.getSaveToComputerHandler(extended.saveToLastFile)}>
+                                                                    <FileInput />
                                                                     <FormattedMessage
                                                                         defaultMessage="Save to {file}"
                                                                         // eslint-disable-next-line max-len
@@ -826,6 +827,7 @@ class MenuBar extends React.Component {
                                                             )}
                                                             {/* eslint-disable-next-line max-len */}
                                                             <MenuItem onClick={this.getSaveToComputerHandler(extended.saveAsNew)}>
+                                                                <Save />
                                                                 <FormattedMessage
                                                                     defaultMessage="Save as..."
                                                                     // eslint-disable-next-line max-len
