@@ -21,7 +21,11 @@ const GUI_MAP = {
     [GUI_SCRATCHBOX_DARK]: guiScratchBoxDark,
     [GUI_SCRATCHBOX_LIGHT]: guiScratchBoxLight
 };
-const GUI_DEFAULT = GUI_SCRATCHBOX_LIGHT;
+
+const getCookieValue = (name) => (
+    document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)')?.pop() || ''
+);
+const GUI_DEFAULT = getCookieValue("theme") == "dark" ? GUI_SCRATCHBOX_DARK : GUI_SCRATCHBOX_LIGHT;
 
 export {
     GUI_MAP,
