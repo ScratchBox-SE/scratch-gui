@@ -6,30 +6,14 @@ import log from '../utils/log';
 import {setProjectTitle} from '../../reducers/project-title';
 import {setAuthor, setDescription} from '../../reducers/tw';
 
+const baseURL = `${window.location.protocol}//${window.location.hostname == "localhost" ? "localhost:3000" : window.location.hostname.replace("editor.", "", 1)}`;
+
 export const fetchProjectMeta = async projectId => {
-    const urls = [
-        `https://trampoline.turbowarp.org/api/projects/${projectId}`,
-        `https://trampoline.turbowarp.xyz/api/projects/${projectId}`
-    ];
-    let firstError;
-    for (const url of urls) {
-        try {
-            const res = await fetch(url);
-            const data = await res.json();
-            if (res.ok) {
-                return data;
-            }
-            if (res.status === 404) {
-                throw new Error('Project is probably unshared');
-            }
-            throw new Error(`Unexpected status code: ${res.status}`);
-        } catch (err) {
-            if (!firstError) {
-                firstError = err;
-            }
-        }
+    const res = await fetch(baseURL + `/api/project/${projectId}`);
+    if (res.ok) {
+        return await res.json();
     }
-    throw firstError;
+    throw new Error(`Unexpected status code: ${res.status}`);
 };
 
 const getNoIndexTag = () => document.querySelector('meta[name="robots"][content="noindex"]');
@@ -59,24 +43,18 @@ const TWProjectMetaFetcherHOC = function (WrappedComponent) {
                 if (projectId === '0') {
                     // don't try to get metadata
                 } else {
-                    fetchProjectMeta(projectId).then(data => {
+                    fetchProjectMeta(projectId).then(async data => {
                         // If project ID changed, ignore the results.
                         if (this.props.reduxProjectId !== projectId) {
                             return;
                         }
 
-                        const title = data.title;
-                        if (title) {
-                            this.props.onSetProjectTitle(title);
-                        }
-                        const authorName = data.author.username;
-                        const authorThumbnail = `https://trampoline.turbowarp.org/avatars/${data.author.id}`;
+                        this.props.onSetProjectTitle(data.name);
+                        const authorName = data.user;
+                        const authorThumbnail = (await (await fetch(`https://trampoline.turbowarp.org/api/users/${data.user}`)).json()).profile.images["90x90"];
+                        console.log(data);
                         this.props.onSetAuthor(authorName, authorThumbnail);
-                        const instructions = data.instructions || '';
-                        const credits = data.description || '';
-                        if (instructions || credits) {
-                            this.props.onSetDescription(instructions, credits);
-                        }
+                        this.props.onSetDescription(data.description, "");
                         setIndexable(true);
                     })
                         .catch(err => {

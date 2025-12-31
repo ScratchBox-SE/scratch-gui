@@ -45,7 +45,6 @@ import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
 
 import {manualUpdateProject} from "../reducers/project-state.js";
 import {showAlertWithTimeout} from "../reducers/alerts.js";
-import {setProjectTitle} from "../reducers/project-title.js";
 
 import styles from './interface.css';
 
@@ -331,12 +330,6 @@ class Interface extends React.Component {
 
     constructor (props) {
         super(props);
-
-        setTimeout(async () => {
-            if (this.props.projectId == '0') return;
-            const projectInfo = await (await fetch(baseURL + `/api/project/${this.props.projectId}`)).json();
-            this.props.setProjectTitle(projectInfo.name);
-        }, 0);
     }
     componentDidUpdate (prevProps) {
         if (prevProps.isLoading && !this.props.isLoading) {
@@ -511,7 +504,6 @@ Interface.propTypes = {
     onShowSaveSuccessAlert: PropTypes.func,
     beginUpdatingProject: PropTypes.func,
     projectTitle: PropTypes.string,
-    setProjectTitle: PropTypes.func
 };
 
 const mapStateToProps = state => ({
@@ -530,7 +522,6 @@ const mapDispatchToProps = dispatch => ({
     onShowSavingAlert: () => showAlertWithTimeout(dispatch, 'saving'),
     onShowSaveSuccessAlert: () => showAlertWithTimeout(dispatch, 'saveSuccess'),
     beginUpdatingProject: () => dispatch(manualUpdateProject()),
-    setProjectTitle: (title) => dispatch(setProjectTitle(title))
 });
 
 const ConnectedInterface = injectIntl(connect(
