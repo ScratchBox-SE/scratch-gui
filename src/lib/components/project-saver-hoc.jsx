@@ -78,7 +78,7 @@ const ProjectSaverHOC = function (WrappedComponent) {
                 this.scheduleAutoSave();
             }
             if (this.props.isUpdating && !prevProps.isUpdating) {
-                this.updateProjectToStorage();
+                // this.updateProjectToStorage();
             }
             if (this.props.isCreatingNew && !prevProps.isCreatingNew) {
                 this.createNewProjectToStorage();
