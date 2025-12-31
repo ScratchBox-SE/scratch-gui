@@ -53,7 +53,8 @@ const BLOCKS_MAP = {
 let themeObjectsCreated = 0;
 
 class Theme {
-    constructor (accent, gui, blocks, menuBarAlign, wallpaper, fonts) {
+    constructor (accent, gui, blocks, menuBarAlign, wallpaper, fonts, name) {
+        if (!name) name = gui;
         // do not modify these directly
         /** @readonly */
         this.id = ++themeObjectsCreated;
@@ -73,6 +74,9 @@ class Theme {
         this.wallpaper = wallpaper || {url: '', opacity: 0.3, darkness: 0, gridVisible: true, history: []};
         /** @readonly */
         this.fonts = fonts || {system: [], google: [], history: []};
+
+        /** @readonly */
+        this.name = name;
     }
 
     static defaults = Object.create(null);
@@ -180,9 +184,11 @@ class Theme {
 const keys = Object.keys(GUI_MAP);
 for (const key of keys) {
     Theme.defaults[key] = new Theme(
-        ACCENT_DEFAULT, GUI_MAP[key], BLOCKS_DEFAULT, MENUBAR_ALIGN_DEFAULT,
+        ACCENT_DEFAULT, key, BLOCKS_DEFAULT, MENUBAR_ALIGN_DEFAULT,
         {url: '', opacity: 0.3, darkness: 0, gridVisible: true, history: []},
-        {system: [], google: [], history: []}
+        {system: [], google: [], history: []},
+        GUI_MAP[key].name
+        
     );
 }
 

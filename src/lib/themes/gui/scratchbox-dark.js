@@ -1,3 +1,5 @@
+const name = "ScratchBox Dark";
+
 const guiColors = {
   "color-scheme": "dark",
 
@@ -86,4 +88,4 @@ const blockColors = {
   gridColor: "#444444",
 };
 
-export { blockColors, guiColors };
+export { blockColors, guiColors, name };
