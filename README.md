@@ -2,7 +2,7 @@ Modified version of [MistWarp](https://github.com/MistWarp) for use with Scratch
 
 ## Setup
 
-See https://docs.warp.mistium.org/development/getting-started to setup the complete MistWarp environment.
+See https://docs.warp.mistium.com/development/getting-started to setup the complete MistWarp environment.
 
 If you just want to play with the GUI then it's the same process as upstream scratch-gui.
 
