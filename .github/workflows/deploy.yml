@@ -26,12 +26,6 @@ jobs:
           repository: ScratchBox-SE/scratch-blocks
           ref: develop
           path: scratch-blocks
-      - name: Checkout scratch-vm
-        uses: actions/checkout@v4
-        with:
-          repository: ScratchBox-SE/scratch-vm
-          ref: develop
-          path: scratch-vm
       - name: Install Node
         uses: actions/setup-node@v4
         with:
@@ -44,18 +38,11 @@ jobs:
           npm install
           npm run prepublish
           npm link
-      - name: Install and Link scratch-vm
-        working-directory: ./scratch-vm
-        run: |
-          npm install
-          npm link scratch-blocks
-          npm run build
-          npm link
       - name: Install Deps
         working-directory: ./scratch-gui
         run: |
           npm install
-          npm link scratch-blocks scratch-vm
+          npm link scratch-blocks
       - name: Build
         working-directory: ./scratch-gui
         run: npm run build
