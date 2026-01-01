@@ -36,7 +36,6 @@ jobs:
         working-directory: ./scratch-blocks
         run: |
           npm install
-          npm run prepublish
           npm link
       - name: Install Deps
         working-directory: ./scratch-gui
