@@ -29,11 +29,13 @@ import DeletionRestorer from '../../containers/deletion-restorer.jsx';
 import TurboMode from '../../containers/turbo-mode.jsx';
 import MenuBarHOC from '../../containers/menu-bar-hoc.jsx';
 import SettingsMenu from './settings-menu.jsx';
+import TWViewCounter from './tw-view-counter.jsx';
 
 import FramerateChanger from '../../containers/tw-framerate-changer.jsx';
 import ChangeUsername from '../../containers/tw-change-username.jsx';
 import CloudVariablesToggler from '../../containers/tw-cloud-toggler.jsx';
 import SaveStatus from './save-status.jsx';
+import TWNews from './tw-news.jsx';
 
 import { FEEDBACK_URL } from '../../lib/constants/brand.js';
 
@@ -373,9 +375,14 @@ class MenuBar extends React.Component {
     }
     handleKeyPress(event) {
         const modifier = bowser.mac ? event.metaKey : event.ctrlKey;
-        if (modifier && event.key.toLowerCase() === 's') {
-            this.props.handleSaveProject();
-            event.preventDefault();
+        if (modifier) {
+            if (event.key.toLowerCase() === 's') {
+                this.props.handleSaveProject();
+                event.preventDefault();    
+            } else if (event.key.toLowerCase() === 'o') {
+                event.preventDefault();    
+                this.props.onStartSelectingFileUpload();
+            }
         }
     }
     getSaveToComputerHandler(downloadProjectCallback) {
@@ -663,7 +670,7 @@ class MenuBar extends React.Component {
         );
         // Show the About button only if we have a handler for it (like in the desktop app)
         const aboutButton = this.buildAboutMenu(this.props.onClickAbout);
-        return (
+        const menuBar = (
             <Box
                 className={classNames(
                     this.props.className,
@@ -836,27 +843,6 @@ class MenuBar extends React.Component {
                                                                 />
                                                             </MenuItem>
                                                         </React.Fragment>
-                                                    )}
-                                                    {notScratchDesktop() && (
-                                                        <MenuItem
-                                                            onClick={this.getSaveToComputerHandler(downloadProject)}
-                                                        >
-                                                            <Download />
-                                                            {extended.available ? (
-                                                                <FormattedMessage
-                                                                    defaultMessage="Save to separate file..."
-                                                                    // eslint-disable-next-line max-len
-                                                                    description="Download the project once, without being able to easily save to the same spot"
-                                                                    id="tw.oldDownload"
-                                                                />
-                                                            ) : (
-                                                                <FormattedMessage
-                                                                    defaultMessage="Save to your computer"
-                                                                    description="Menu bar item for downloading a project to your computer" // eslint-disable-line max-len
-                                                                    id="gui.menuBar.downloadToComputer"
-                                                                />
-                                                            )}
-                                                        </MenuItem>
                                                     )}
                                                 </React.Fragment>
                                             )}
@@ -1147,6 +1133,12 @@ class MenuBar extends React.Component {
                             username={this.props.authorUsername}
                         />
                     ) : null)}
+
+                    {(this.props.isShowingProject || this.props.isUpdating) && this.props.projectId && this.props.projectId !== '0' ? (
+                        <div className={classNames(styles.menuBarItem, styles.viewCounter)}>
+                            <TWViewCounter projectId={this.props.projectId} />
+                        </div>
+                    ) : null}
                     {this.props.canShare ? (
                         (this.props.isShowingProject || this.props.isUpdating) && (
                             <div className={classNames(styles.menuBarItem)}>
@@ -1237,6 +1229,13 @@ class MenuBar extends React.Component {
 
                 {aboutButton}
             </Box>
+        );
+
+        return (
+            <React.Fragment>
+                {menuBar}
+                <TWNews />
+            </React.Fragment>
         );
     }
 }

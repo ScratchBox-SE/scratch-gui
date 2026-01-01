@@ -82,7 +82,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
                                 {
                                     description: 'Scratch Project',
                                     accept: {
-                                        'application/x.scratch.sb3': ['.sb', '.sb2', '.sb3']
+                                        // Using application/x.scratch.sb3 as done in scratch-vm causes file pickers
+                                        // to disallow picking any items in Chrome 133 on Android.
+                                        'application/octet-stream': ['.sb', '.sb2', '.sb3']
                                     }
                                 }
                             ]
@@ -282,7 +284,9 @@ const SBFileUploaderHOC = function (WrappedComponent) {
         onSetFileHandle: PropTypes.func
     };
     SBFileUploaderComponent.defaultProps = {
-        showOpenFilePicker: typeof showOpenFilePicker === 'function' ? window.showOpenFilePicker.bind(window) : null
+        showOpenFilePicker: typeof showOpenFilePicker === 'function' && !navigator.userAgent.includes('Android') ?
+            window.showOpenFilePicker.bind(window) :
+            null
     };
     const mapStateToProps = (state, ownProps) => {
         const loadingState = state.scratchGui.projectState.loadingState;

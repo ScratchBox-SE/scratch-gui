@@ -33,6 +33,11 @@
     color: $menu-bar-foreground;
 }
 
+.menu-bar {
+    position: relative;
+    z-index: 9999;
+}
+
 .main-menu {
     display: flex;
     flex-direction: row;
@@ -49,6 +54,12 @@
 }
 .main-menu-align-center {
     justify-content: center;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 0;
+    height: 100%;
+    width: max-content
 }
 .main-menu-align-right {
     justify-content: flex-end;
@@ -134,6 +145,13 @@
     margin-right: .6875rem;
 }
 
+.view-counter {
+    margin: 0 .25rem;
+    padding: 0 .5rem;
+    font-weight: normal;
+    opacity: 0.8;
+}
+
 .menu-bar-button {
     height: $menu-bar-button-size;
 }
@@ -154,6 +172,10 @@
     display: flex;
     flex-direction: row;
     align-items: center;
+    right: 0;
+    position: absolute;
+    top: 0;
+    height: 100%;
 }
 
 .account-info-group .menu-bar-item {

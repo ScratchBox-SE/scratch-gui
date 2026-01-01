@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
-import React, { useCallback } from 'react';
+import React, {useCallback} from 'react';
 import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import MediaQuery from 'react-responsive';
@@ -116,7 +116,6 @@ const GUIComponent = props => {
         customStageSize,
         enableCommunity,
         extensionLibraryVisible,
-        intl,
         isCreating,
         isEmbedded,
         isFullScreen,
@@ -144,7 +143,6 @@ const GUIComponent = props => {
         onActivateSoundsTab,
         onActivateTab,
         onClickLogo,
-        onExtensionButtonClick,
         onOpenCustomExtensionModal,
         onProjectTelemetryEvent,
         onRequestCloseBackdropLibrary,
@@ -277,7 +275,10 @@ const GUIComponent = props => {
                     />
                 ) : null}
                 {isBrowserSupported() ? null : (
-                    <BrowserModal isRtl={isRtl} />
+                    <BrowserModal
+                        isRtl={isRtl}
+                        onClickDesktopSettings={onClickDesktopSettings}
+                    />
                 )}
                 {tipsLibraryVisible ? (
                     <TipsLibrary />
@@ -378,11 +379,11 @@ const GUIComponent = props => {
                                                 id="gui.gui.backdropsTab"
                                             />
                                         ) : (
-                                        <FormattedMessage
-                                            defaultMessage="Costumes"
-                                            description="Button to get to the costumes panel"
-                                            id="gui.gui.costumesTab"
-                                        />
+                                            <FormattedMessage
+                                                defaultMessage="Costumes"
+                                                description="Button to get to the costumes panel"
+                                                id="gui.gui.costumesTab"
+                                            />
                                         )}
                                     </Tab>
                                     <Tab
