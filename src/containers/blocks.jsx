@@ -87,8 +87,19 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
     if (!ScratchBlocks || ScratchBlocks.__mistwarpSystemBlocksClipboardInstalled) return;
     ScratchBlocks.__mistwarpSystemBlocksClipboardInstalled = true;
 
-    const canWriteText = () => typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText;
-    const canReadText = () => typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.readText;
+    const isFirefox = () => typeof navigator !== 'undefined' &&
+        typeof navigator.userAgent === 'string' &&
+        navigator.userAgent.includes('Firefox');
+    
+    const canWriteText = () => !isFirefox() &&
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        navigator.clipboard.writeText;
+    
+    const canReadText = () => !isFirefox() &&
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        navigator.clipboard.readText;
 
     const encodeBase64Utf8 = value => {
         if (typeof btoa !== 'function') return null;
@@ -358,10 +369,8 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
 
         if (ScratchBlocks.mainWorkspace.isDragging()) return;
 
-        e.preventDefault();
-
         navigator.clipboard.readText()
-            .then(text => {
+            .then(async text => {
                 const parsed = parseClipboardTextToBlockXml(text);
                 const maybeXml = parsed && parsed.xml;
                 const meta = (parsed && parsed.meta) || (maybeXml && guessExtensionMetaForXml(maybeXml));
@@ -370,9 +379,8 @@ const installSystemClipboardForBlocks = (ScratchBlocks, vm) => {
                     ScratchBlocks.clipboardSource_ = ScratchBlocks.mainWorkspace;
                     ScratchBlocks.__mistwarpSystemClipboardExtensionMeta = meta;
                 }
-                return ensureExtensionsLoaded(ScratchBlocks.__mistwarpSystemClipboardExtensionMeta).then(() => {
-                    pasteFromCurrentClipboardXml();
-                });
+                await ensureExtensionsLoaded(ScratchBlocks.__mistwarpSystemClipboardExtensionMeta);
+                pasteFromCurrentClipboardXml();
             })
             .catch(() => {
                 pasteFromCurrentClipboardXml();
@@ -441,14 +449,37 @@ class Blocks extends React.Component {
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
         this.ScratchBlocks.recordSoundCallback = this.handleOpenSoundRecorder;
 
+        this.handlePaletteResizePointerDown = this.handlePaletteResizePointerDown.bind(this);
+        this.handlePaletteResizePointerMove = this.handlePaletteResizePointerMove.bind(this);
+        this.handlePaletteResizePointerUp = this.handlePaletteResizePointerUp.bind(this);
+        this.setFlyoutWidth = this.setFlyoutWidth.bind(this);
+
+        this.handleAddonSettingChanged = this.handleAddonSettingChanged.bind(this);
+        this.applyPaletteResizeEnabledState = this.applyPaletteResizeEnabledState.bind(this);
+
+        this.handlePaletteHoverEnter = this.handlePaletteHoverEnter.bind(this);
+        this.handlePaletteHoverLeave = this.handlePaletteHoverLeave.bind(this);
+        this.attachPaletteHoverListeners = this.attachPaletteHoverListeners.bind(this);
+        this.detachPaletteHoverListeners = this.detachPaletteHoverListeners.bind(this);
+
         this.state = {
-            prompt: null
+            prompt: null,
+            flyoutWidth: null,
+            paletteResizeEnabled: !SettingsStore.getAddonEnabled('hide-flyout')
         };
+
+        this.paletteResizeSession = null;
+        this.paletteResizeRaf = null;
+
+        this.paletteHoverCount = 0;
+        this._paletteHoverEls = null;
         this.onTargetsUpdate = debounce(this.onTargetsUpdate, 100);
         this.onWorkspaceMetricsChange = debounce(this.onWorkspaceMetricsChange, 100);
         this.toolboxUpdateQueue = [];
     }
     componentDidMount () {
+        SettingsStore.addEventListener('setting-changed', this.handleAddonSettingChanged);
+
         this.ScratchBlocks = VMScratchBlocks(this.props.vm, this.props.useCatBlocks);
         this.ScratchBlocks.prompt = this.handlePromptStart;
         this.ScratchBlocks.statusButtonCallback = this.handleConnectionModalStart;
@@ -497,6 +528,17 @@ class Blocks extends React.Component {
         // lists, and procedures from extensions.
 
         const toolboxWorkspace = this.workspace.getFlyout().getWorkspace();
+
+        try {
+            const initialFlyoutWidth = this.workspace.getFlyout().getWidth();
+            if (typeof initialFlyoutWidth === 'number' && Number.isFinite(initialFlyoutWidth)) {
+                if (this.state.paletteResizeEnabled) {
+                    this.setFlyoutWidth(initialFlyoutWidth);
+                }
+            }
+        } catch (e) {
+            // Ignore; resizing will be unavailable if flyout/toolbox APIs differ.
+        }
 
         const varListButtonCallback = type =>
             (() => this.ScratchBlocks.Variables.createVariable(this.workspace, null, type));
@@ -552,10 +594,17 @@ class Blocks extends React.Component {
         }
 
         gentlyRequestPersistentStorage();
+
+        // Defer attaching hover listeners until ScratchBlocks has finished injecting its DOM.
+        setTimeout(() => {
+            if (!this.unmounted) this.attachPaletteHoverListeners();
+        }, 0);
     }
     shouldComponentUpdate (nextProps, nextState) {
         return (
             this.state.prompt !== nextState.prompt ||
+            this.state.flyoutWidth !== nextState.flyoutWidth ||
+            this.state.paletteResizeEnabled !== nextState.paletteResizeEnabled ||
             this.props.isVisible !== nextProps.isVisible ||
             this._renderedToolboxXML !== nextProps.toolboxXML ||
             this.props.extensionLibraryVisible !== nextProps.extensionLibraryVisible ||
@@ -642,6 +691,8 @@ class Blocks extends React.Component {
         }
     }
     componentWillUnmount () {
+        SettingsStore.removeEventListener('setting-changed', this.handleAddonSettingChanged);
+        this.detachPaletteHoverListeners();
         this.detachVM();
         this.unmounted = true;
         this.workspace.dispose();
@@ -655,6 +706,268 @@ class Blocks extends React.Component {
         this.props.vm.clearFlyoutBlocks();
 
         AddonHooks.blocklyWorkspace = null;
+    }
+
+    attachPaletteHoverListeners () {
+        if (!this.blocks) return;
+        if (!this.workspace || !this.workspace.getFlyout) return;
+
+        // toolbox div and flyout svg are siblings inside the injection container.
+        const toolboxDiv = this.blocks.querySelector('.blocklyToolboxDiv');
+        const flyoutSvgGroup = this.blocks.querySelector('.blocklyFlyout');
+        const els = [toolboxDiv, flyoutSvgGroup].filter(Boolean);
+        if (els.length === 0) return;
+
+        // Avoid double-binding.
+        if (this._paletteHoverEls) return;
+
+        for (const el of els) {
+            el.addEventListener('mouseenter', this.handlePaletteHoverEnter);
+            el.addEventListener('mouseleave', this.handlePaletteHoverLeave);
+        }
+        this._paletteHoverEls = els;
+    }
+
+    detachPaletteHoverListeners () {
+        if (!this._paletteHoverEls) return;
+        for (const el of this._paletteHoverEls) {
+            el.removeEventListener('mouseenter', this.handlePaletteHoverEnter);
+            el.removeEventListener('mouseleave', this.handlePaletteHoverLeave);
+        }
+        this._paletteHoverEls = null;
+        this.paletteHoverCount = 0;
+        // Restore clipping as a safe default.
+        try {
+            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
+            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
+                flyout.twSetClippingEnabled(true);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    handlePaletteHoverEnter () {
+        this.paletteHoverCount += 1;
+        try {
+            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
+            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
+                flyout.twSetClippingEnabled(false);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    handlePaletteHoverLeave () {
+        this.paletteHoverCount = Math.max(0, this.paletteHoverCount - 1);
+        if (this.paletteHoverCount !== 0) return;
+        try {
+            const flyout = this.workspace && this.workspace.getFlyout && this.workspace.getFlyout();
+            if (flyout && typeof flyout.twSetClippingEnabled === 'function') {
+                flyout.twSetClippingEnabled(true);
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    setFlyoutWidth (flyoutWidth) {
+        if (!this.workspace || !this.workspace.getFlyout || !this.workspace.getToolbox) return;
+        if (!this.state.paletteResizeEnabled) return;
+        if (!(typeof flyoutWidth === 'number' && Number.isFinite(flyoutWidth))) return;
+
+        const flyout = this.workspace.getFlyout();
+        const toolbox = this.workspace.getToolbox && this.workspace.getToolbox();
+        if (!flyout || !toolbox) return;
+
+        if (typeof flyout.setWidth === 'function') {
+            flyout.setWidth(flyoutWidth);
+        }
+        if (typeof toolbox.setFlyoutWidth === 'function') {
+            toolbox.setFlyoutWidth(flyoutWidth);
+        }
+
+        if (this.blocks && this.blocks.style && typeof this.blocks.style.setProperty === 'function') {
+            this.blocks.style.setProperty('--blocks-palette-width', `${60 + flyoutWidth}px`);
+        }
+
+        if (this.state.flyoutWidth !== flyoutWidth) {
+            this.setState({flyoutWidth});
+        }
+        // Recompute Blockly layout.
+        this.workspace.resize();
+    }
+
+    handlePaletteResizePointerDown (e) {
+        if (!this.workspace || !this.workspace.getFlyout || !this.workspace.getToolbox) return;
+        if (!this.state.paletteResizeEnabled) return;
+        if (typeof e.button !== 'undefined' && e.button !== 0) return;
+        e.preventDefault();
+
+        // Capture the pointer so we keep receiving move events even if the cursor
+        // leaves the handle.
+        if (e.currentTarget &&
+            typeof e.currentTarget.setPointerCapture === 'function' &&
+            typeof e.pointerId === 'number') {
+            try {
+                e.currentTarget.setPointerCapture(e.pointerId);
+            } catch (err) {
+                // Ignore; capture is best-effort.
+            }
+        }
+
+        const container = this.blocks;
+        if (!container || !container.getBoundingClientRect) return;
+
+        const flyout = this.workspace.getFlyout();
+        const toolbox = this.workspace.getToolbox && this.workspace.getToolbox();
+        if (!flyout || !toolbox) return;
+
+        const startFlyoutWidth = flyout.getWidth();
+        const rect = container.getBoundingClientRect();
+
+        // In ScratchBlocks this.toolboxPosition exists on the workspace.
+        const TOOLBOX_AT_RIGHT = this.ScratchBlocks && this.ScratchBlocks.TOOLBOX_AT_RIGHT;
+        const toolboxAtRight = TOOLBOX_AT_RIGHT ? (this.workspace.options.toolboxPosition === TOOLBOX_AT_RIGHT) : false;
+
+        this.paletteResizeSession = {
+            startClientX: e.clientX,
+            startFlyoutWidth,
+            containerLeft: rect.left,
+            containerRight: rect.right,
+            containerWidth: rect.width,
+            toolboxAtRight
+        };
+
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none';
+
+        const isPointerEvent = typeof e.type === 'string' && e.type.startsWith('pointer');
+        if (isPointerEvent) {
+            window.addEventListener('pointermove', this.handlePaletteResizePointerMove);
+            window.addEventListener('pointerup', this.handlePaletteResizePointerUp);
+            window.addEventListener('pointercancel', this.handlePaletteResizePointerUp);
+        } else {
+            window.addEventListener('mousemove', this.handlePaletteResizePointerMove);
+            window.addEventListener('mouseup', this.handlePaletteResizePointerUp);
+        }
+    }
+
+    handlePaletteResizePointerMove (e) {
+        if (!this.paletteResizeSession) return;
+        if (!this.state.paletteResizeEnabled) return;
+        const {
+            startFlyoutWidth,
+            containerLeft,
+            containerRight,
+            containerWidth,
+            toolboxAtRight
+        } = this.paletteResizeSession;
+
+        const CATEGORY_MENU_WIDTH = 60;
+        const MIN_WORKSPACE_WIDTH = 200;
+        const MIN_FLYOUT_WIDTH = 160;
+        const maxFlyoutWidth = Math.max(
+            MIN_FLYOUT_WIDTH,
+            Math.floor(containerWidth - CATEGORY_MENU_WIDTH - MIN_WORKSPACE_WIDTH)
+        );
+
+        let nextPaletteWidth;
+        if (toolboxAtRight) {
+            nextPaletteWidth = Math.round(containerRight - e.clientX);
+        } else {
+            nextPaletteWidth = Math.round(e.clientX - containerLeft);
+        }
+
+        let nextFlyoutWidth = nextPaletteWidth - CATEGORY_MENU_WIDTH;
+        nextFlyoutWidth = Math.max(
+            MIN_FLYOUT_WIDTH,
+            Math.min(maxFlyoutWidth, nextFlyoutWidth)
+        );
+
+        // Avoid excessive reflows.
+        if (this.paletteResizeRaf) return;
+        this.paletteResizeRaf = window.requestAnimationFrame(() => {
+            this.paletteResizeRaf = null;
+            // If something changed mid-drag (e.g. window resized), fall back to incremental changes.
+            if (!Number.isFinite(nextFlyoutWidth)) return;
+            if (Math.round(nextFlyoutWidth) !== Math.round(startFlyoutWidth)) {
+                this.setFlyoutWidth(nextFlyoutWidth);
+            }
+        });
+    }
+
+    handlePaletteResizePointerUp () {
+        this.paletteResizeSession = null;
+        if (this.paletteResizeRaf) {
+            window.cancelAnimationFrame(this.paletteResizeRaf);
+            this.paletteResizeRaf = null;
+        }
+        document.body.style.cursor = '';
+        document.body.style.userSelect = '';
+        window.removeEventListener('pointermove', this.handlePaletteResizePointerMove);
+        window.removeEventListener('pointerup', this.handlePaletteResizePointerUp);
+        window.removeEventListener('pointercancel', this.handlePaletteResizePointerUp);
+        window.removeEventListener('mousemove', this.handlePaletteResizePointerMove);
+        window.removeEventListener('mouseup', this.handlePaletteResizePointerUp);
+    }
+
+    handleAddonSettingChanged (e) {
+        const detail = e && e.detail;
+        if (!detail) return;
+        if (detail.addonId !== 'hide-flyout') return;
+        if (detail.settingId !== 'enabled') return;
+
+        const nextPaletteResizeEnabled = !SettingsStore.getAddonEnabled('hide-flyout');
+        if (this.state.paletteResizeEnabled === nextPaletteResizeEnabled) return;
+
+        this.setState({
+            paletteResizeEnabled: nextPaletteResizeEnabled
+        }, () => {
+            this.applyPaletteResizeEnabledState(nextPaletteResizeEnabled);
+        });
+    }
+
+    applyPaletteResizeEnabledState (paletteResizeEnabled) {
+        if (!this.workspace || !this.workspace.getFlyout || !this.workspace.getToolbox) return;
+
+        // Stop any active drag session immediately.
+        this.handlePaletteResizePointerUp();
+
+        const flyout = this.workspace.getFlyout();
+        const toolbox = this.workspace.getToolbox && this.workspace.getToolbox();
+        if (!flyout || !toolbox) return;
+
+        const CATEGORY_MENU_WIDTH = 60;
+
+        if (paletteResizeEnabled) {
+            // Re-sync the current (default) flyout width into our override system.
+            const currentWidth = flyout.getWidth();
+            if (typeof currentWidth === 'number' && Number.isFinite(currentWidth)) {
+                this.setFlyoutWidth(currentWidth);
+            }
+        } else {
+            // Clear width overrides so the auto-hiding palette addon can control layout.
+            if (typeof flyout.setWidth === 'function') {
+                flyout.setWidth(null);
+            }
+
+            const flyoutWidth = flyout.getWidth();
+            if (typeof flyoutWidth === 'number' && Number.isFinite(flyoutWidth)) {
+                toolbox.width = CATEGORY_MENU_WIDTH + flyoutWidth;
+            }
+
+            if (this.blocks && this.blocks.style) {
+                this.blocks.style.removeProperty('--blocks-palette-width');
+            }
+
+            if (this.state.flyoutWidth !== null) {
+                this.setState({flyoutWidth: null});
+            }
+
+            this.workspace.resize();
+        }
     }
     requestToolboxUpdate () {
         clearTimeout(this.toolboxUpdateTimeout);
@@ -1086,6 +1399,10 @@ class Blocks extends React.Component {
                     componentRef={this.setBlocks}
                     onDrop={this.handleDrop}
                     gridVisible={this.props.theme.wallpaper.gridVisible !== false}
+                    paletteWidth={typeof this.state.flyoutWidth === 'number' ?
+                        (60 + this.state.flyoutWidth) : null}
+                    paletteResizingEnabled={this.state.paletteResizeEnabled}
+                    onPaletteResizePointerDown={this.handlePaletteResizePointerDown}
                     {...props}
                 />
                 {this.state.prompt ? (

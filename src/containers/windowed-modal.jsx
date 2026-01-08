@@ -18,12 +18,16 @@ class WindowedModal extends React.Component {
             'handlePopState',
             'pushHistory',
             'handleWindowClose',
-            'handleWindowMinimize'
+            'handleWindowMinimize',
+            'handleWindowMove',
+            'handleWindowResize',
+            'scheduleBlocklyWidgetReposition'
         ]);
         this.window = null;
         this.contentContainer = null;
         this.createdWindow = false;
         this.windowId = this.props.id || 'modal-window';
+        this.blocklyWidgetRepositionRaf_ = null;
         this.addEventListeners();
     }
     
@@ -42,6 +46,8 @@ class WindowedModal extends React.Component {
                 this.window.show();
             }
         }
+
+        this.resizeToContentIfNeeded();
     }
     
     componentDidUpdate (prevProps) {
@@ -71,14 +77,72 @@ class WindowedModal extends React.Component {
         if (this.window && this.contentContainer) {
             // React will handle rendering through the portal
         }
+
+        this.resizeToContentIfNeeded();
     }
-    
+
     componentWillUnmount () {
         this.removeEventListeners();
-        // Only close the window if we created it, not if we reused an existing one
+        if (this.blocklyWidgetRepositionRaf_) {
+            window.cancelAnimationFrame(this.blocklyWidgetRepositionRaf_);
+            this.blocklyWidgetRepositionRaf_ = null;
+        }
         if (this.window && this.createdWindow) {
             this.window.close();
         }
+    }
+
+    scheduleBlocklyWidgetReposition () {
+        if (this.blocklyWidgetRepositionRaf_) return;
+
+        this.blocklyWidgetRepositionRaf_ = window.requestAnimationFrame(() => {
+            this.blocklyWidgetRepositionRaf_ = null;
+            const ScratchBlocks = window.ScratchBlocks;
+            if (!ScratchBlocks || !ScratchBlocks.WidgetDiv) return;
+            if (typeof ScratchBlocks.WidgetDiv.isVisible === 'function' && !ScratchBlocks.WidgetDiv.isVisible()) return;
+
+            try {
+                // FieldTextInput positions itself with extra alignment logic in resizeEditor_.
+                // Calling it keeps the editor's left/top correct when the modal window moves.
+                const owner = ScratchBlocks.WidgetDiv.owner_;
+                if (owner && typeof owner.resizeEditor_ === 'function') {
+                    owner.resizeEditor_();
+                } else if (typeof ScratchBlocks.WidgetDiv.repositionForWindowResize === 'function') {
+                    ScratchBlocks.WidgetDiv.repositionForWindowResize();
+                }
+            } catch (e) {
+                // Never allow a reposition failure to break window dragging.
+            }
+        });
+    }
+
+    handleWindowMove () {
+        this.scheduleBlocklyWidgetReposition();
+    }
+
+    handleWindowResize () {
+        this.scheduleBlocklyWidgetReposition();
+    }
+
+    resizeToContentIfNeeded () {
+        if (!this.window || !this.contentContainer) return;
+        if (this.props.id !== 'mwProjectThemeModal') return;
+
+        window.requestAnimationFrame(() => {
+            if (!this.window || !this.contentContainer) return;
+
+            const headerHeight = this.window.headerElement ? this.window.headerElement.offsetHeight : 0;
+            const contentHeight = this.contentContainer.scrollHeight;
+            const desiredHeight = Math.max(0, headerHeight + contentHeight);
+
+            if (!desiredHeight || !Number.isFinite(desiredHeight)) return;
+
+            this.window.height = desiredHeight;
+            this.window.element.style.height = `${desiredHeight}px`;
+
+            this.window.minHeight = desiredHeight;
+            this.window.maxHeight = desiredHeight;
+        });
     }
     
     createWindow () {
@@ -111,6 +175,10 @@ class WindowedModal extends React.Component {
         let height = 500;
         let resizable = true;
         let maximizable = true;
+        let minWidth = 400;
+        let minHeight = 300;
+        let maxWidth = null;
+        let maxHeight = null;
         
         if (fullScreen) {
             width = Math.min(1200, window.innerWidth - 100);
@@ -139,6 +207,15 @@ class WindowedModal extends React.Component {
             height = 400;
             resizable = false;
             maximizable = false;
+        } else if (id === 'mwProjectThemeModal') {
+            width = 520;
+            height = 240;
+            minWidth = 520;
+            minHeight = 0;
+            maxWidth = 520;
+            maxHeight = 240;
+            resizable = false;
+            maximizable = false;
         }
         
         this.window = WindowManager.createWindow({
@@ -146,16 +223,21 @@ class WindowedModal extends React.Component {
             title: typeof contentLabel === 'string' ? contentLabel : 'Dialog',
             width,
             height,
-            minWidth: 400,
-            minHeight: 300,
+            minWidth,
+            minHeight,
+            maxWidth,
+            maxHeight,
             resizable,
             maximizable,
             closable: true,
             className: `modal-window ${className}`,
             modal: true,
+            alwaysOnTop: id === 'unknownPlatformModal',
             destroyOnMinimize: true,
             onClose: this.handleWindowClose,
-            onMinimize: this.handleWindowMinimize
+            onMinimize: this.handleWindowMinimize,
+            onMove: this.handleWindowMove,
+            onResize: this.handleWindowResize
         });
         this.createdWindow = true;
         
@@ -173,6 +255,12 @@ class WindowedModal extends React.Component {
             overflow: hidden;
             min-height: 0;
         `;
+
+        if (id === 'mwProjectThemeModal') {
+            this.contentContainer.style.height = 'auto';
+            this.contentContainer.style.maxHeight = 'none';
+            this.contentContainer.style.overflow = 'visible';
+        }
         
         this.window.setContent(this.contentContainer);
         this.forceUpdate(); // Force re-render now that container is available

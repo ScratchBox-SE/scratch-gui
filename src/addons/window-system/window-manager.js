@@ -6,8 +6,17 @@
 const WINDOW_Z_INDEX_BASE = 8000;
 const WINDOW_Z_INDEX_MAX = 8999;
 let nextZIndex = WINDOW_Z_INDEX_BASE;
+
+// Some UI overlays (like the project loader) sit above the normal window range.
+// This tier is for specific windows that must remain interactable above those overlays.
+// Keep below the context menu layer (see src/css/z-index.css).
+const WINDOW_ON_TOP_Z_INDEX_BASE = 9600;
+const WINDOW_ON_TOP_Z_INDEX_MAX = 9999;
+let nextOnTopZIndex = WINDOW_ON_TOP_Z_INDEX_BASE;
 let windowCount = 0;
 const activeWindows = new Map();
+
+import getMenuBarHeight from '../../lib/utils/menu-bar-height';
 
 class AddonWindow {
     constructor (options = {}) {
@@ -28,11 +37,13 @@ class AddonWindow {
         this.maximizable = options.maximizable !== false;
         this.className = options.className || '';
         this.destroyOnMinimize = options.destroyOnMinimize || false;
+        this.alwaysOnTop = options.alwaysOnTop || false;
+        
         this.isVisible = false;
         this.isMinimized = false;
         this.isMaximized = false;
-        this.zIndex = ++nextZIndex;
-
+        this.zIndex = this.alwaysOnTop ? ++nextOnTopZIndex : ++nextZIndex;
+        
         this.onClose = options.onClose || (() => {});
         this.onMinimize = options.onMinimize || (() => {});
         this.onMaximize = options.onMaximize || (() => {});
@@ -173,7 +184,7 @@ class AddonWindow {
         }
 
         if (this.closable) {
-            const closeBtn = this.createControlButton('close', 'Minimize', () => this.minimize());
+            const closeBtn = this.createControlButton('close', 'Close', () => this.close());
             controlsElement.appendChild(closeBtn);
         }
 
@@ -229,19 +240,23 @@ class AddonWindow {
         let svgIcon = '';
         switch (type) {
         case 'maximize':
-            svgIcon = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="none" rx="1"/>
+            svgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
                 </svg>`;
             break;
         case 'restore':
-            svgIcon = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-            <rect x="2" y="3" width="6" height="6" stroke="currentColor" stroke-width="1.2" fill="none" rx="0.5"/>
-<path d="M4 3V2a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H9" stroke="currentColor" stroke-width="1.2" fill="none"/>
+            svgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>`;
             break;
         case 'close':
-            svgIcon = `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <path d="M2 6h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            svgIcon = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 6 6 18"/>
+                    <path d="m6 6 12 12"/>
                 </svg>`;
             break;
         }
@@ -341,13 +356,15 @@ class AddonWindow {
     updateMaximizeButton () {
         if (this.maximizeBtn) {
             const svgIcon = this.isMaximized ?
-                `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                <rect x="2" y="3" width="6" height="6" stroke="currentColor" stroke-width="1.2" fill="none" rx="0.5"/>
-<path d="M4 3V2a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v5a1 1 0 0 1-1 1H9" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                </svg>` :
-                `<svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                    <rect x="2" y="2" width="8" height="8" stroke="currentColor" stroke-width="1.5" fill="none" rx="1"/>
-                </svg>`;
+                `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                    </svg>` :
+                `<svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                    </svg>`;
             this.maximizeBtn.innerHTML = svgIcon;
             this.maximizeBtn.title = this.isMaximized ? 'Restore' : 'Maximize';
         }
@@ -645,20 +662,32 @@ class AddonWindow {
     }
 
     bringToFront () {
-        if (nextZIndex >= WINDOW_Z_INDEX_MAX) {
-            const windows = Array.from(activeWindows.values());
+        const isOnTopTier = this.alwaysOnTop;
+        const baseZ = isOnTopTier ? WINDOW_ON_TOP_Z_INDEX_BASE : WINDOW_Z_INDEX_BASE;
+        const maxZ = isOnTopTier ? WINDOW_ON_TOP_Z_INDEX_MAX : WINDOW_Z_INDEX_MAX;
+
+        if ((isOnTopTier ? nextOnTopZIndex : nextZIndex) >= maxZ) {
+            const windows = Array.from(activeWindows.values()).filter(w => w.alwaysOnTop === isOnTopTier);
             const index = windows.indexOf(this);
             if (index !== -1) windows.splice(index, 1);
             windows.sort((a, b) => a.zIndex - b.zIndex);
 
-            nextZIndex = WINDOW_Z_INDEX_BASE;
-            for (const window of windows) {
-                window.zIndex = ++nextZIndex;
-                window.element.style.zIndex = window.zIndex;
+            if (isOnTopTier) {
+                nextOnTopZIndex = baseZ;
+                for (const window of windows) {
+                    window.zIndex = ++nextOnTopZIndex;
+                    window.element.style.zIndex = window.zIndex;
+                }
+            } else {
+                nextZIndex = baseZ;
+                for (const window of windows) {
+                    window.zIndex = ++nextZIndex;
+                    window.element.style.zIndex = window.zIndex;
+                }
             }
         }
 
-        this.zIndex = ++nextZIndex;
+        this.zIndex = isOnTopTier ? ++nextOnTopZIndex : ++nextZIndex;
         this.element.style.zIndex = this.zIndex;
     }
 
@@ -745,16 +774,17 @@ class AddonWindow {
         };
 
         this.isMaximized = true;
+        const menuBarHeight = getMenuBarHeight();
         this.x = 0;
-        this.y = 0;
+        this.y = menuBarHeight;
         this.width = window.innerWidth;
-        this.height = window.innerHeight;
-
+        this.height = Math.max(0, window.innerHeight - menuBarHeight);
+        
         this.element.style.left = '0px';
-        this.element.style.top = '0px';
+        this.element.style.top = `${menuBarHeight}px`;
         this.element.style.width = '100vw';
-        this.element.style.height = '100vh';
-
+        this.element.style.height = `${this.height}px`;
+        
         this.updateMaximizeButton();
         this.onMaximize();
         return this;

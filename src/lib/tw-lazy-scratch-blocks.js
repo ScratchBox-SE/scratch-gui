@@ -9,6 +9,34 @@ const get = () => {
     return _ScratchBlocks;
 };
 
+const hasOwn = (obj, key) => Object.prototype.hasOwnProperty.call(obj, key);
+
+const applyHorizontalDeclip = flyoutInstance => {
+    if (!flyoutInstance || !flyoutInstance.clipRect_) return;
+    const rect = flyoutInstance.clipRect_;
+    if (!hasOwn(flyoutInstance, 'twOriginalClipRectX_')) {
+        flyoutInstance.twOriginalClipRectX_ = rect.getAttribute('x');
+    }
+    if (!hasOwn(flyoutInstance, 'twOriginalClipRectWidth_')) {
+        flyoutInstance.twOriginalClipRectWidth_ = rect.getAttribute('width');
+    }
+    rect.setAttribute('x', '-100000');
+    rect.setAttribute('width', '200000px');
+};
+
+const restoreHorizontalDeclip = flyoutInstance => {
+    if (!flyoutInstance || !flyoutInstance.clipRect_) return;
+    const rect = flyoutInstance.clipRect_;
+    if (hasOwn(flyoutInstance, 'twOriginalClipRectX_')) {
+        if (flyoutInstance.twOriginalClipRectX_ === null) rect.removeAttribute('x');
+        else rect.setAttribute('x', flyoutInstance.twOriginalClipRectX_);
+    }
+    if (hasOwn(flyoutInstance, 'twOriginalClipRectWidth_')) {
+        if (flyoutInstance.twOriginalClipRectWidth_ === null) rect.removeAttribute('width');
+        else rect.setAttribute('width', flyoutInstance.twOriginalClipRectWidth_);
+    }
+};
+
 const load = () => {
     if (_ScratchBlocks) {
         return Promise.resolve();
@@ -16,10 +44,119 @@ const load = () => {
     return import(/* webpackChunkName: "sb" */ 'scratch-blocks')
         .then(m => {
             _ScratchBlocks = m.default;
+
+            const FlyoutProto = _ScratchBlocks.Flyout && _ScratchBlocks.Flyout.prototype;
+            if (FlyoutProto) {
+                const originalGetWidth = FlyoutProto.getWidth;
+                if (typeof originalGetWidth === 'function' && typeof FlyoutProto.setWidth !== 'function') {
+                    FlyoutProto.setWidth = function (width) {
+                        this.twUserWidth_ = (typeof width === 'number' && Number.isFinite(width)) ? width : null;
+                    };
+                    FlyoutProto.getWidth = function () {
+                        if (typeof this.twUserWidth_ === 'number') return this.twUserWidth_;
+                        return originalGetWidth.call(this);
+                    };
+                }
+            }
+
+            const ToolboxProto = _ScratchBlocks.Toolbox && _ScratchBlocks.Toolbox.prototype;
+
+            if (ToolboxProto && typeof ToolboxProto.setFlyoutWidth !== 'function') {
+                ToolboxProto.setFlyoutWidth = function (flyoutWidth) {
+                    const CATEGORY_MENU_WIDTH = 60;
+                    if (!(typeof flyoutWidth === 'number' && Number.isFinite(flyoutWidth))) return;
+                    this.width = CATEGORY_MENU_WIDTH + flyoutWidth;
+                    if (this.flyout_ && typeof this.flyout_.setWidth === 'function') {
+                        this.flyout_.setWidth(flyoutWidth);
+                    }
+                };
+            }
+
+            const verticalFlyoutProto = _ScratchBlocks.VerticalFlyout && _ScratchBlocks.VerticalFlyout.prototype;
+
+            // Allow disabling flyout clipping (clip-path) at runtime.
+            if (verticalFlyoutProto && typeof verticalFlyoutProto.twSetClippingEnabled !== 'function') {
+
+                if (typeof verticalFlyoutProto.setMetrics_ === 'function' &&
+                    typeof verticalFlyoutProto.twOriginalSetMetrics_ !== 'function') {
+                    verticalFlyoutProto.twOriginalSetMetrics_ = verticalFlyoutProto.setMetrics_;
+
+                    verticalFlyoutProto.setMetrics_ = function (xyRatio) {
+                        verticalFlyoutProto.twOriginalSetMetrics_.call(this, xyRatio);
+                        if (this.twHorizontalDeclip_) {
+                            applyHorizontalDeclip(this);
+                        }
+                    };
+                }
+
+                verticalFlyoutProto.twSetClippingEnabled = function (enabled) {
+                    if (!this.workspace_ || !this.workspace_.svgGroup_) return;
+                    const svgGroup = this.workspace_.svgGroup_;
+                    const flyoutSvg = this.svgGroup_;
+                    if (enabled) {
+                        this.twHorizontalDeclip_ = false;
+                        restoreHorizontalDeclip(this);
+                        if (this.twOriginalClipPath_) {
+                            svgGroup.setAttribute('clip-path', this.twOriginalClipPath_);
+                        }
+
+                        if (flyoutSvg) {
+                            if (hasOwn(this, 'twOriginalFlyoutOverflow_')) {
+                                flyoutSvg.style.overflow = this.twOriginalFlyoutOverflow_ || '';
+                            }
+                            if (hasOwn(this, 'twOriginalFlyoutOverflowAttr_')) {
+                                if (this.twOriginalFlyoutOverflowAttr_ === null) {
+                                    flyoutSvg.removeAttribute('overflow');
+                                } else {
+                                    flyoutSvg.setAttribute('overflow', this.twOriginalFlyoutOverflowAttr_);
+                                }
+                            }
+                        }
+                    } else {
+                        if (!this.twOriginalClipPath_) {
+                            this.twOriginalClipPath_ = svgGroup.getAttribute('clip-path');
+                        }
+                        this.twHorizontalDeclip_ = true;
+                        applyHorizontalDeclip(this);
+
+                        const options = this.workspace_ && this.workspace_.options;
+                        try {
+                            if (options &&
+                                typeof options.setMetrics === 'function' &&
+                                !hasOwn(this, 'twOriginalSetMetrics_')) {
+
+                                const original = options.setMetrics;
+                                this.twOriginalSetMetrics_ = original;
+                                const flyout = this;
+                                options.setMetrics = function (xyRatio) {
+                                    const result = original.call(this, xyRatio);
+                                    if (flyout.twHorizontalDeclip_) {
+                                        applyHorizontalDeclip(flyout);
+                                    }
+                                    return result;
+                                };
+                            }
+                        } catch (e) {
+                            // ignore
+                        }
+
+                        if (flyoutSvg) {
+                            if (!hasOwn(this, 'twOriginalFlyoutOverflow_')) {
+                                this.twOriginalFlyoutOverflow_ = flyoutSvg.style.overflow;
+                            }
+                            if (!hasOwn(this, 'twOriginalFlyoutOverflowAttr_')) {
+                                this.twOriginalFlyoutOverflowAttr_ = flyoutSvg.getAttribute('overflow');
+                            }
+                            flyoutSvg.style.overflow = 'visible';
+                            flyoutSvg.setAttribute('overflow', 'visible');
+                        }
+                    }
+                };
+            }
             
             // Patch VerticalFlyout.createRect_ to handle race conditions
-            if (_ScratchBlocks.VerticalFlyout && _ScratchBlocks.VerticalFlyout.prototype.createRect_) {
-                _ScratchBlocks.VerticalFlyout.prototype.createRect_ = function (block, x, y, blockHW, index) {
+            if (verticalFlyoutProto && verticalFlyoutProto.createRect_) {
+                verticalFlyoutProto.createRect_ = function (block, x, y, blockHW, index) {
                     // Create an invisible rectangle under the block to act as a button
                     const rect = _ScratchBlocks.utils.createSvgElement('rect', {
                         'fill-opacity': 0,

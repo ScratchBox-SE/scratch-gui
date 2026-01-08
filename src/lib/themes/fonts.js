@@ -6,6 +6,17 @@ import {loadGoogleFont} from './google-fonts';
 
 let currentFontStyleElement = null;
 
+const DEFAULT_FALLBACK_STACK = [
+    'system-ui',
+    '-apple-system',
+    'BlinkMacSystemFont',
+    '"Segoe UI"',
+    'Roboto',
+    '"Helvetica Neue"',
+    'Arial',
+    'sans-serif'
+];
+
 const setCurrentFontStyleEl = element => {
     currentFontStyleElement = element;
 };
@@ -17,43 +28,37 @@ const setCurrentFontStyleEl = element => {
  * @param {Array} fonts.system - Array of system font names
  */
 const applyThemeFonts = async fonts => {
-    // Debug logging
-    
+    const existingStyleEl = document.getElementById('theme-fonts');
+    if (existingStyleEl) {
+        existingStyleEl.remove();
+    }
+
     // Remove existing font styles
     if (currentFontStyleElement) {
         currentFontStyleElement.remove();
         setCurrentFontStyleEl(null);
     }
 
-    if (!fonts || (!fonts.google?.length && !fonts.system?.length)) {
-        return;
-    }
-
     // Load Google Fonts first
-    if (fonts.google?.length) {
-        await Promise.all(fonts.google.map(fontName => loadGoogleFont(fontName)));
+    if (fonts?.google?.length) {
+        await Promise.all(fonts.google.map(fontName => loadGoogleFont(fontName, ['400', '700'])));
     }
 
     // Create CSS for theme fonts
     const fontStack = [];
     
     // Add Google Fonts first (they have priority)
-    if (fonts.google?.length) {
+    if (fonts?.google?.length) {
         fontStack.push(...fonts.google.map(font => `"${font}"`));
     }
     
     // Add system fonts
-    if (fonts.system?.length) {
+    if (fonts?.system?.length) {
         fontStack.push(...fonts.system.map(font => `"${font}"`));
     }
     
     // Add fallback fonts
-    fontStack.push(
-        'system-ui', '-apple-system',
-        'BlinkMacSystemFont', '"Segoe UI"',
-        'Roboto', '"Helvetica Neue"',
-        'Arial', 'sans-serif'
-    );
+    fontStack.push(...DEFAULT_FALLBACK_STACK);
     
     const fontFamily = fontStack.join(', ');
     
@@ -95,6 +100,10 @@ const applyThemeFonts = async fonts => {
  * Remove theme fonts from the document
  */
 const removeThemeFonts = () => {
+    const existingStyleEl = document.getElementById('theme-fonts');
+    if (existingStyleEl) {
+        existingStyleEl.remove();
+    }
     if (currentFontStyleElement) {
         currentFontStyleElement.remove();
         setCurrentFontStyleEl(null);
@@ -108,7 +117,7 @@ const removeThemeFonts = () => {
  */
 const getFontFamilyString = fonts => {
     if (!fonts || (!fonts.google?.length && !fonts.system?.length)) {
-        return 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+        return DEFAULT_FALLBACK_STACK.join(', ');
     }
 
     const fontStack = [];
@@ -121,11 +130,7 @@ const getFontFamilyString = fonts => {
         fontStack.push(...fonts.system.map(font => `"${font}"`));
     }
     
-    fontStack.push(
-        'system-ui', '-apple-system',
-        'BlinkMacSystemFont', '"Segoe UI"', 'Roboto',
-        '"Helvetica Neue"', 'Arial', 'sans-serif'
-    );
+    fontStack.push(...DEFAULT_FALLBACK_STACK);
     
     return fontStack.join(', ');
 };
