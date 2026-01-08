@@ -140,7 +140,7 @@
     height: 100%;
     box-sizing: border-box !important;
 
-    border-radius: 10px;
+    border-radius: 1.1rem;
     font-size: 0.75rem;
     padding: 0 60px 0 2.4rem;
     background: var(--ui-tertiary, #e6f3ff);
