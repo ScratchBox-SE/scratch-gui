@@ -49,9 +49,7 @@ const messages = defineMessages({
 const randomMessages = [
     "Also try TurboWarp!",
     "Because PenguinMod is cringe!",
-    "Also try Snail IDE!",
-    "Also try Electramod!",
-    "Also try every other Scratch clone!",
+    "Also try every other Scratch clone! (idk maybe)",
     "From the creators of Scratch Everywhere!",
     "Support the Scratch Foundation!",
     "By (mostly) Grady Link and Dogo! (and Mistium!)",
