@@ -1,12 +1,11 @@
 // This file is only used by pull.js to generate files. It is not used at runtime.
 
 const addons = [
-    'calculator',
     'cat-blocks',
     'editor-devtools',
-    'find-bar',
     'middle-click-popup',
     'jump-to-def',
+    'tab-styles',
     'reorder-custom-inputs',
     'editor-searchable-dropdowns',
     'data-category-tweaks-v2',
@@ -72,7 +71,6 @@ const addons = [
     'columns',
     'number-pad',
     'editor-number-arrow-keys',
-    'expanded-backpack',
     'script-snap',
     'fullscreen',
     'hide-stage',
@@ -80,21 +78,19 @@ const addons = [
     'tw-remove-backpack',
     'tw-remove-feedback',
     'tw-disable-cloud-variables',
-    'tw-disable-compiler',
     'editor-stepping',
     'autosave',
-    'workspace-tabs',
     'no-category-text',
-    'green-flag-order'
+    'green-flag-order',
+    'remove-extension-button'
 ];
 
 const newAddons = [
-    'calculator',
-    'expanded-backpack',
     'autosave',
-    'workspace-tabs',
     'no-category-text',
-    'green-flag-order'
+    'green-flag-order',
+    'remove-extension-button',
+    'tab-styles'
 ];
 
 // eslint-disable-next-line import/no-commonjs

@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import omit from 'lodash.omit';
 import PropTypes from 'prop-types';
-import React, {useCallback, useEffect, useRef, useState} from 'react';
-import {FormattedMessage, injectIntl, intlShape} from 'react-intl';
+import React, {useCallback, useEffect, useRef, useState, useMemo} from 'react';
+import {defineMessages, FormattedMessage, injectIntl, intlShape} from 'react-intl';
 import {connect} from 'react-redux';
 import MediaQuery from 'react-responsive';
 import {Tab, Tabs, TabList, TabPanel} from 'react-tabs';
@@ -29,6 +29,7 @@ import Cards from '../../containers/cards.jsx';
 import Alerts from '../../containers/alerts.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
+import CollaborationContainer from '../../containers/collaboration-container.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import TWUsernameModal from '../../containers/tw-username-modal.jsx';
 import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
@@ -38,6 +39,7 @@ import TWRestorePointManager from '../../containers/tw-restore-point-manager.jsx
 import TWFontsModal from '../../containers/tw-fonts-modal.jsx';
 import TWUnknownPlatformModal from '../../containers/tw-unknown-platform-modal.jsx';
 import TWInvalidProjectModal from '../../containers/tw-invalid-project-modal.jsx';
+import TWGitModal from '../../containers/mw-git-modal.jsx';
 import MWExtensionManagerModal from '../../containers/mw-extension-manager-modal.jsx';
 import MWProjectThemeModal from '../../containers/mw-project-theme-modal.jsx';
 import AddonHooks from '../../addons/hooks.js';
@@ -53,10 +55,19 @@ import {isRendererSupported, isBrowserSupported} from '../../lib/utils/tw-enviro
 
 import styles from './gui.css';
 
+const messages = defineMessages({
+    addExtension: {
+        id: 'gui.gui.addExtension',
+        description: 'Button to add an extension in the target pane',
+        defaultMessage: 'Add Extension'
+    }
+});
+
 import {
     Blocks as BlocksIcon,
     PaintbrushVertical as CostumesIcon,
-    Volume2 as SoundsIcon
+    Volume2 as SoundsIcon,
+    PackagePlus as ExtensionIcon
 } from 'lucide-react';
 
 const getFullscreenBackgroundColor = () => {
@@ -77,6 +88,24 @@ const AUTO_RESTORE_STAGE_INNER_WIDTH = Math.round(FIXED_WIDTH * 0.875);
 const MIN_EDITOR_PANE_WIDTH = 598;
 const MIN_TARGET_PANE_HEIGHT = 180;
 
+const cachedStyleValues = new WeakMap();
+
+const getCachedBorderWidth = element => {
+    if (!element) return 2;
+    
+    const cached = cachedStyleValues.get(element);
+    if (typeof cached !== 'undefined') return cached;
+    
+    const computedStyle = window.getComputedStyle(element);
+    const borderLeft = Number.parseFloat(computedStyle.borderLeftWidth) || 0;
+    const borderRight = Number.parseFloat(computedStyle.borderRightWidth) || 0;
+    const total = borderLeft + borderRight;
+    const result = (!Number.isFinite(total) || total < 0) ? 2 : total;
+    
+    cachedStyleValues.set(element, result);
+    return result;
+};
+
 const GUIComponent = props => {
     const handleEnableProcedureReturns = useCallback(() => {
         try {
@@ -85,7 +114,6 @@ const GUIComponent = props => {
             if (workspace && workspace.enableProcedureReturns) {
                 workspace.enableProcedureReturns();
                 
-                // Force toolbox refresh
                 if (workspace.refreshToolboxSelection_) {
                     workspace.refreshToolboxSelection_();
                 }
@@ -98,6 +126,7 @@ const GUIComponent = props => {
     const editorWrapperRef = useRef(null);
     const stageAndTargetWrapperRef = useRef(null);
     const stageResizeRafRef = useRef(null);
+    const measureRafRef = useRef(null);
     const autoSmallStageRequestedRef = useRef(false);
     const autoSmallStageActiveRef = useRef(false);
     const lastNonSmallStageSizeModeRef = useRef(STAGE_SIZE_MODES.large);
@@ -110,40 +139,57 @@ const GUIComponent = props => {
 
     const getStageBorderExtraWidth = useCallback(containerEl => {
         if (!containerEl || typeof window === 'undefined') return 0;
-        // CSS modules will generate something like "stage_stage__...".
+        
         const stageEl = containerEl.querySelector('[class*="stage_stage"]');
         if (!stageEl) return 2;
-        const computedStyle = window.getComputedStyle(stageEl);
-        const borderLeft = Number.parseFloat(computedStyle.borderLeftWidth) || 0;
-        const borderRight = Number.parseFloat(computedStyle.borderRightWidth) || 0;
-        const total = borderLeft + borderRight;
-        if (!Number.isFinite(total) || total < 0) return 2;
-        return total;
+        
+        return getCachedBorderWidth(stageEl);
     }, []);
 
     const measureStageContainerWidth = useCallback(() => {
-        const el = stageAndTargetWrapperRef.current;
-        if (!el) return;
-        const rect = el.getBoundingClientRect();
-        if (rect && typeof rect.width === 'number' && Number.isFinite(rect.width)) {
+        if (measureRafRef.current) return;
+        
+        measureRafRef.current = requestAnimationFrame(() => {
+            measureRafRef.current = null;
+            
+            const el = stageAndTargetWrapperRef.current;
+            if (!el) return;
+
+            const rect = el.getBoundingClientRect();
+            if (!Number.isFinite(rect.width)) return;
+
             const computedStyle = window.getComputedStyle(el);
             const paddingLeft = Number.parseFloat(computedStyle.paddingLeft) || 0;
             const paddingRight = Number.parseFloat(computedStyle.paddingRight) || 0;
             const borderExtra = getStageBorderExtraWidth(el);
-            setStageContainerWidth(Math.max(0, rect.width - paddingLeft - paddingRight - borderExtra));
-        }
+
+            const innerWidth = Math.max(
+                0,
+                rect.width - paddingLeft - paddingRight - borderExtra
+            );
+
+            setStageContainerWidth(prev => {
+                if (typeof prev === 'number' && Math.abs(prev - innerWidth) < 2) {
+                    return prev;
+                }
+                return innerWidth;
+            });
+        });
     }, [getStageBorderExtraWidth]);
 
+    const lastResizeWidthRef = useRef(null);
     useEffect(() => {
         if (typeof stageContainerWidth !== 'number') return;
+
+        const rounded = Math.round(stageContainerWidth);
+        if (lastResizeWidthRef.current === rounded) return;
+
+        lastResizeWidthRef.current = rounded;
+
         if (stageResizeRafRef.current) return;
-        stageResizeRafRef.current = window.requestAnimationFrame(() => {
+        stageResizeRafRef.current = requestAnimationFrame(() => {
             stageResizeRafRef.current = null;
-            try {
-                window.dispatchEvent(new Event('resize'));
-            } catch (e) {
-                // ignore
-            }
+            window.dispatchEvent(new Event('resize'));
         });
     }, [stageContainerWidth]);
 
@@ -185,7 +231,13 @@ const GUIComponent = props => {
             measureStageContainerWidth();
         });
         observer.observe(el);
-        return () => observer.disconnect();
+        return () => {
+            observer.disconnect();
+            if (measureRafRef.current) {
+                cancelAnimationFrame(measureRafRef.current);
+                measureRafRef.current = null;
+            }
+        };
     }, [measureStageContainerWidth]);
 
     const handleStagePanelResizePointerDown = useCallback(e => {
@@ -205,7 +257,7 @@ const GUIComponent = props => {
         const startWidth = startRect.width;
         const startInnerWidth = Math.max(0, startWidth - paddingLeft - paddingRight - borderExtra);
 
-        setStageContainerWidth(startInnerWidth);
+        setStageContainerWidth(Math.round(startInnerWidth));
 
         if (e.currentTarget &&
             typeof e.currentTarget.setPointerCapture === 'function' &&
@@ -263,24 +315,41 @@ const GUIComponent = props => {
         const stageIsLeft = editorRect ? (startRect.left < editorRect.left) : false;
         const directionFactor = stageIsLeft ? 1 : -1;
 
+        let moveRaf = null;
         const onMove = ev => {
-            const x = (typeof ev.clientX === 'number') ? ev.clientX : 0;
-            const dx = x - startX;
-            const nextWidth = Math.min(maxWidth, Math.max(minWidth, startWidth + (dx * directionFactor)));
-            const nextInnerWidth = Math.max(0, nextWidth - paddingLeft - paddingRight - borderExtra);
-            setStagePanelWidth(nextWidth);
-            setStageContainerWidth(nextInnerWidth);
+            if (moveRaf) return;
+            
+            moveRaf = requestAnimationFrame(() => {
+                moveRaf = null;
+                
+                const x = (typeof ev.clientX === 'number') ? ev.clientX : 0;
+                const dx = x - startX;
+                const nextWidth = Math.min(maxWidth, Math.max(minWidth, startWidth + (dx * directionFactor)));
+                const nextInnerWidth = Math.max(0, nextWidth - paddingLeft - paddingRight - borderExtra);
+                
+                setStagePanelWidth(nextWidth);
+                setStageContainerWidth(prev => {
+                    if (typeof prev === 'number' && Math.abs(prev - nextInnerWidth) < 0.5) {
+                        return prev;
+                    }
+                    return nextInnerWidth;
+                });
 
-            if (!props.isFullScreen &&
-                props.stageSizeMode !== STAGE_SIZE_MODES.small &&
-                typeof props.onSetStageSize === 'function' &&
-                nextInnerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
-                autoSmallStageActiveRef.current = true;
-                props.onSetStageSize(STAGE_SIZE_MODES.small);
-            }
+                if (!props.isFullScreen &&
+                    props.stageSizeMode !== STAGE_SIZE_MODES.small &&
+                    typeof props.onSetStageSize === 'function' &&
+                    nextInnerWidth < AUTO_SMALL_STAGE_INNER_WIDTH) {
+                    autoSmallStageActiveRef.current = true;
+                    props.onSetStageSize(STAGE_SIZE_MODES.small);
+                }
+            });
         };
 
         const onUp = () => {
+            if (moveRaf) {
+                cancelAnimationFrame(moveRaf);
+                moveRaf = null;
+            }
             window.removeEventListener('pointermove', onMove);
             window.removeEventListener('pointerup', onUp);
             window.removeEventListener('mousemove', onMove);
@@ -329,6 +398,7 @@ const GUIComponent = props => {
         costumesTabVisible,
         customStageSize,
         enableCommunity,
+        intl,
         extensionLibraryVisible,
         isCreating,
         isEmbedded,
@@ -359,6 +429,7 @@ const GUIComponent = props => {
         onActivateSoundsTab,
         onActivateTab,
         onClickLogo,
+        onExtensionButtonClick,
         onOpenCustomExtensionModal,
         onProjectTelemetryEvent,
         onRequestCloseBackdropLibrary,
@@ -366,6 +437,7 @@ const GUIComponent = props => {
         onRequestCloseExtensionLibrary,
         onRequestCloseTelemetryModal,
         onSeeCommunity,
+        onSetStageSize: _onSetStageSize,
         onShare,
         onShowPrivacyPolicy,
         onStartSelectingFileUpload,
@@ -388,6 +460,7 @@ const GUIComponent = props => {
         fontsModalVisible,
         unknownPlatformModalVisible,
         invalidProjectModalVisible,
+        gitModalVisible,
         vm,
         onClickSave,
         ...componentProps
@@ -396,48 +469,71 @@ const GUIComponent = props => {
         return <Box {...componentProps}>{children}</Box>;
     }
 
-    const tabClassNames = {
+    const tabClassNames = useMemo(() => ({
         tabs: styles.tabs,
         tab: classNames(tabStyles.reactTabsTab, styles.tab),
         tabList: classNames(tabStyles.reactTabsTabList, styles.tabList),
         tabPanel: classNames(tabStyles.reactTabsTabPanel, styles.tabPanel),
         tabPanelSelected: classNames(tabStyles.reactTabsTabPanelSelected, styles.isSelected),
         tabSelected: classNames(tabStyles.reactTabsTabSelected, styles.isSelected)
-    };
+    }), []);
 
-    const unconstrainedWidth = (
+    const unconstrainedWidth = useMemo(() => (
         UNCONSTRAINED_NON_STAGE_WIDTH +
         FIXED_WIDTH +
         Math.max(0, customStageSize.width - FIXED_WIDTH)
-    );
+    ), [customStageSize.width]);
+
+    const alwaysEnabledModals = useMemo(() => (
+        <React.Fragment>
+            <TWSecurityManager securityManager={securityManager} />
+            <TWRestorePointManager />
+            <MWExtensionManagerModal />
+            <MWProjectThemeModal />
+            {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
+            {settingsModalVisible && (
+                <TWSettingsModal
+                    isRtl={isRtl}
+                    visible={settingsModalVisible}
+                />
+            )}
+            {customExtensionModalVisible && <TWCustomExtensionModal />}
+            {fontsModalVisible && <TWFontsModal />}
+            {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
+            {invalidProjectModalVisible && <TWInvalidProjectModal />}
+            {gitModalVisible && <TWGitModal />}
+        </React.Fragment>
+    ), [
+        securityManager,
+        usernameModalVisible,
+        settingsModalVisible,
+        isRtl,
+        customExtensionModalVisible,
+        fontsModalVisible,
+        unknownPlatformModalVisible,
+        invalidProjectModalVisible,
+        gitModalVisible
+    ]);
+
+    const minDimensions = useMemo(() => ({
+        minWidth: 1024 + Math.max(0, customStageSize.width - 480),
+        minHeight: 640 + Math.max(0, customStageSize.height - 360)
+    }), [customStageSize.width, customStageSize.height]);
+
+    const stagePanelStyle = useMemo(() => {
+        if (!stagePanelWidth) return null;
+        return {
+            width: `${stagePanelWidth}px`,
+            flexBasis: `${stagePanelWidth}px`,
+            flexShrink: 0
+        };
+    }, [stagePanelWidth]);
+
     return (<MediaQuery minWidth={unconstrainedWidth}>{isUnconstrained => {
         const stageSize = resolveStageSize(stageSizeMode, isUnconstrained);
 
-        const alwaysEnabledModals = (
-            <React.Fragment>
-                <TWSecurityManager securityManager={securityManager} />
-                <TWRestorePointManager />
-                <MWExtensionManagerModal />
-                <MWProjectThemeModal />
-                {usernameModalVisible && <TWUsernameModal visible={usernameModalVisible} />}
-                {settingsModalVisible && (
-                    <TWSettingsModal
-                        isRtl={isRtl}
-                        visible={settingsModalVisible}
-                    />
-                )}
-                {customExtensionModalVisible && <TWCustomExtensionModal />}
-                {fontsModalVisible && <TWFontsModal />}
-                {unknownPlatformModalVisible && <TWUnknownPlatformModal />}
-                {invalidProjectModalVisible && <TWInvalidProjectModal />}
-            </React.Fragment>
-        );
-
         return isPlayerOnly ? (
             <React.Fragment>
-                {/* TW: When the window is fullscreen, use an element to display the background color */}
-                {/* The default color for transparency is inconsistent between browsers and there isn't an existing */}
-                {/* element for us to style that fills the entire screen. */}
                 {isWindowFullScreen ? (
                     <div
                         className={styles.fullscreenBackground}
@@ -465,10 +561,7 @@ const GUIComponent = props => {
             <Box
                 className={styles.pageWrapper}
                 dir={isRtl ? 'rtl' : 'ltr'}
-                style={{
-                    minWidth: 1024 + Math.max(0, customStageSize.width - 480),
-                    minHeight: 640 + Math.max(0, customStageSize.height - 360)
-                }}
+                style={minDimensions}
                 {...componentProps}
             >
                 {alwaysEnabledModals}
@@ -512,6 +605,7 @@ const GUIComponent = props => {
                         vm={vm}
                     />
                 ) : null}
+                <CollaborationContainer />
                 {costumeLibraryVisible ? (
                     <CostumeLibrary
                         vm={vm}
@@ -642,6 +736,18 @@ const GUIComponent = props => {
                                             vm={vm}
                                         />
                                     </Box>
+                                    <Box className={styles.extensionButtonContainer}>
+                                        <button
+                                            className={styles.extensionButton}
+                                            title={intl.formatMessage(messages.addExtension)}
+                                            onClick={onExtensionButtonClick}
+                                        >
+                                            <ExtensionIcon
+                                                className={styles.extensionButtonIcon}
+                                                draggable={false}
+                                            />
+                                        </button>
+                                    </Box>
                                     <Box className={styles.watermark}>
                                         <Watermark />
                                     </Box>
@@ -672,11 +778,7 @@ const GUIComponent = props => {
                         <Box
                             className={classNames(styles.stageAndTargetWrapper, styles[stageSize])}
                             ref={stageAndTargetWrapperRef}
-                            style={stagePanelWidth ? {
-                                width: `${stagePanelWidth}px`,
-                                flexBasis: `${stagePanelWidth}px`,
-                                flexShrink: 0
-                            } : null}
+                            style={stagePanelStyle}
                         >
                             <StageWrapper
                                 isFullScreen={isFullScreen}
@@ -715,9 +817,9 @@ const GUIComponent = props => {
 GUIComponent.propTypes = {
     accountNavOpen: PropTypes.bool,
     activeTabIndex: PropTypes.number,
-    authorId: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]), // can be false
+    authorId: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     authorThumbnailUrl: PropTypes.string,
-    authorUsername: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]), // can be false
+    authorUsername: PropTypes.oneOfType([PropTypes.string, PropTypes.bool]),
     backdropLibraryVisible: PropTypes.bool,
     backpackHost: PropTypes.string,
     backpackVisible: PropTypes.bool,
@@ -804,6 +906,7 @@ GUIComponent.propTypes = {
     invalidProjectModalVisible: PropTypes.bool,
     vm: PropTypes.instanceOf(VM).isRequired,
     onClickSave: PropTypes.func,
+    gitModalVisible: PropTypes.bool
 };
 GUIComponent.defaultProps = {
     backpackHost: null,
@@ -832,7 +935,6 @@ GUIComponent.defaultProps = {
 const mapStateToProps = state => ({
     customStageSize: state.scratchGui.customStageSize,
     isWindowFullScreen: state.scratchGui.tw.isWindowFullScreen,
-    // This is the button's mode, as opposed to the actual current state
     blocksId: state.scratchGui.timeTravel.year.toString(),
     stageSizeMode: state.scratchGui.stageSize.stageSize,
     theme: state.scratchGui.theme.theme,
