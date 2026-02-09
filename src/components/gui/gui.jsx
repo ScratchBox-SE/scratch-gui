@@ -27,9 +27,11 @@ import BrowserModal from '../browser-modal/browser-modal.jsx';
 import TipsLibrary from '../../containers/tips-library.jsx';
 import Cards from '../../containers/cards.jsx';
 import Alerts from '../../containers/alerts.jsx';
+import NotificationsProvider from '../../lib/notifications-provider.jsx';
 import DragLayer from '../../containers/drag-layer.jsx';
 import ConnectionModal from '../../containers/connection-modal.jsx';
 import CollaborationContainer from '../../containers/collaboration-container.jsx';
+import CollabLoader from '../collab-loader/collab-loader.jsx';
 import TelemetryModal from '../telemetry-modal/telemetry-modal.jsx';
 import TWUsernameModal from '../../containers/tw-username-modal.jsx';
 import TWSettingsModal from '../../containers/tw-settings-modal.jsx';
@@ -486,6 +488,7 @@ const GUIComponent = props => {
 
     const alwaysEnabledModals = useMemo(() => (
         <React.Fragment>
+            <NotificationsProvider />
             <TWSecurityManager securityManager={securityManager} />
             <TWRestorePointManager />
             <MWExtensionManagerModal />
@@ -585,6 +588,7 @@ const GUIComponent = props => {
                         messageId="gui.loader.creating"
                     />
                 ) : null}
+                <CollabLoader />
                 {isBrowserSupported() ? null : (
                     <BrowserModal
                         isRtl={isRtl}
