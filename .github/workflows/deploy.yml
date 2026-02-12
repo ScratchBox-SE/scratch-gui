@@ -40,8 +40,8 @@ jobs:
       - name: Install Deps
         working-directory: ./scratch-gui
         run: |
-          npm install
-          npm link scratch-blocks
+          npm install --force
+          npm link scratch-blocks --force
       - name: Build
         working-directory: ./scratch-gui
         run: npm run build
