@@ -63,16 +63,18 @@ const MenuItem = ({
     children,
     className,
     expanded = false,
-    onClick
+    onClick,
+    disabled = false
 }) => (
     <li
         className={classNames(
             styles.menuItem,
             styles.hoverable,
             className,
-            {[styles.expanded]: expanded}
+            {[styles.expanded]: expanded},
+            {[styles.disabled]: disabled}
         )}
-        onClick={onClick}
+        onClick={disabled ? (() => {}) : onClick}
     >
         {children}
     </li>

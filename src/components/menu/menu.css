@@ -58,11 +58,18 @@
 .menu-item.active,
 .menu-item:hover,
 .menu-item.expanded {
-    background-color: $ui-black-transparent;
+    &:not(.disabled) {
+        background-color: $ui-black-transparent;
+    }
 }
 
 .menu-item.hoverable {
     cursor: pointer;
+}
+
+.menu-item.disabled {
+    cursor: default;
+    opacity: 0.5;
 }
 
 .menu-section {

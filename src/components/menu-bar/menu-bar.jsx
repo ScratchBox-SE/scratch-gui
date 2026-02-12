@@ -1327,14 +1327,14 @@ class MenuBar extends React.Component {
                                                 id="mw.menuBar.git"
                                             />
                                         </MenuItem>
-                                        <MenuItem onClick={this.props.onClickCollaboration}>
-                                        <Handshake size={20} />
-                                        <FormattedMessage
-                                            defaultMessage="Live Collaboration"
-                                            description="Menu bar item for live collaboration"
-                                            id="tw.menuBar.collaboration"
-                                        />
-                                    </MenuItem>
+                                        <MenuItem onClick={this.props.onClickCollaboration} disabled="true">
+                                            <Handshake size={20} />
+                                            <FormattedMessage
+                                                defaultMessage="Live Collaboration (coming soon)"
+                                                description="Menu bar item for live collaboration"
+                                                id="tw.menuBar.collaboration"
+                                            />
+                                        </MenuItem>
                                     </MenuSection>
                                     <MenuSection>
                                         <MenuItem onClick={this.handleClickRestorePoints}>
