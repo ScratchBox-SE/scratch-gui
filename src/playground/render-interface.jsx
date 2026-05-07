@@ -42,6 +42,8 @@ import AddonChannels from '../addons/channels';
 import {loadServiceWorker} from './load-service-worker';
 import runAddons from '../addons/entry';
 import {APP_NAME, FEEDBACK_URL, GITHUB_URL} from '../lib/constants/brand.js';
+import {manualUpdateProject} from "../reducers/project-state.js";
+import {showAlertWithTimeout} from "../reducers/alerts.js";
 
 import windowManager from '../addons/window-system/window-manager';
 
