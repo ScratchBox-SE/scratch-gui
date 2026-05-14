@@ -1,0 +1,246 @@
+.se-window {
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.se-window-root {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px 16px 16px;
+    box-sizing: border-box;
+}
+
+.se-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--text-primary-transparent, rgba(0, 0, 0, 0.55));
+    margin-bottom: 3px;
+}
+
+
+.se-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 7px 10px;
+    border-radius: 5px;
+    border: 1.5px solid var(--button-stroke, #ccc);
+    background: var(--ui-primary, #fff);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.se-input:focus {
+    border-color: var(--accent-color, #4c97ff);
+}
+
+.se-input--mono {
+    font-family: "SFMono-Regular", "Consolas", "Liberation Mono", monospace;
+    letter-spacing: 0.06em;
+}
+
+.se-input--short {
+    width: 90px;
+}
+
+/* Error state */
+.se-input--error {
+    border-color: var(--error-color, #e81a1a);
+    animation: se-shake 0.3s ease;
+}
+
+@keyframes se-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-4px);
+    }
+
+    75% {
+        transform: translateX(4px);
+    }
+}
+
+.se-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+
+.se-hint {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--text-primary-transparent, rgba(0, 0, 0, 0.5));
+}
+
+.se-hint--warn {
+    color: #d97706 !important;
+}
+
+.se-toggle-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.se-toggle-row--right {
+    justify-content: flex-end;
+}
+
+.se-checkbox {
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    accent-color: var(--accent-color, #4c97ff);
+    flex-shrink: 0;
+}
+
+.se-toggle-label {
+    font-size: 13px;
+    color: var(--text-primary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.se-link-btn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 11px;
+    font-family: inherit;
+    color: var(--accent-color, #4c97ff);
+    cursor: pointer;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    opacity: 0.85;
+    transition: opacity 0.15s;
+}
+
+.se-link-btn:hover {
+    opacity: 1;
+}
+
+.se-progress-area {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 6px 0;
+}
+
+.se-progress-track {
+    height: 7px;
+    border-radius: 999px;
+    background: var(--button-stroke, rgba(0, 0, 0, 0.12));
+    overflow: hidden;
+}
+
+.se-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 999px;
+    background: var(--accent-color, #4c97ff);
+    transition: width 0.25s ease, background-color 0.4s ease;
+}
+
+.se-progress-fill--success {
+    background: #22c55e;
+}
+
+.se-progress-label {
+    font-size: 11px;
+    text-align: center;
+    color: var(--text-primary-transparent, rgba(0, 0, 0, 0.55));
+}
+
+.se-error-box {
+    padding: 10px 12px;
+    border-radius: 5px;
+    border: 1px solid rgba(220, 53, 69, 0.35);
+    background: rgba(220, 53, 69, 0.08);
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.se-error-box b {
+    display: block;
+    margin-bottom: 3px;
+    color: #dc3545;
+}
+
+.se-error-box code {
+    font-family: "SFMono-Regular", "Consolas", monospace;
+    font-size: 11px;
+    word-break: break-all;
+}
+
+.se-btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 2px;
+}
+
+.se-btn {
+    padding: 7px 16px;
+    border-radius: 5px;
+    border: none;
+    font-size: 13px;
+    font-family: inherit;
+    font-weight: 500;
+    cursor: pointer;
+    transition: filter 0.15s, transform 0.1s;
+}
+
+.se-btn:hover {
+    filter: brightness(0.92);
+}
+
+.se-btn:active {
+    transform: scale(0.97);
+}
+
+.se-btn--secondary {
+    background: var(--button-background, #e6e6e6);
+    color: var(--button-text, #333);
+    border: 1px solid var(--button-stroke, #ccc);
+}
+
+.se-btn--primary {
+    background: var(--accent-color, #4c97ff);
+    color: #fff;
+}
+
+.sa-se-navbar-item {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    padding: 0 0.75rem;
+    transition: background-color 0.2s;
+    user-select: none;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.sa-se-nav-icon {
+    margin-right: 0.5rem;
+    display: flex;
+    align-items: center;
+    opacity: 0.9;
+}
+
+.sa-se-nav-icon svg {
+    flex-shrink: 0;
+}

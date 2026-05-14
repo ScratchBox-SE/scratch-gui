@@ -86,4 +86,5 @@ export default {
   "remove-extension-button": () => import(/* webpackChunkName: "addon-entry-remove-extension-button" */ "../addons/remove-extension-button/_runtime_entry.js"),
   "tab-styles": () => import(/* webpackChunkName: "addon-entry-tab-styles" */ "../addons/tab-styles/_runtime_entry.js"),
   "window-theme": () => import(/* webpackChunkName: "addon-entry-window-theme" */ "../addons/window-theme/_runtime_entry.js"),
+  "share-project": () => import(/* webpackChunkName: "addon-entry-shareProject" */ "../addons/share-project/_runtime_entry.js"),
 };
